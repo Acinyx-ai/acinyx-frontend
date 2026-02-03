@@ -14,18 +14,14 @@ export default function Chat() {
   const navigate = useNavigate();
   const bottomRef = useRef(null);
 
-  const [token, setToken] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Auth check
   useEffect(() => {
     const t = localStorage.getItem("acinyx_token");
     if (!t) return navigate("/login");
-    setToken(t);
   }, [navigate]);
 
-  // Auto scroll
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
@@ -53,7 +49,6 @@ export default function Chat() {
       if (text) form.append("message", text);
       if (image) form.append("image", image);
 
-      // ✅ FIX: always read the token directly from localStorage
       const authToken = localStorage.getItem("acinyx_token");
 
       const res = await fetch(API("/ai/chat"), {
@@ -87,13 +82,11 @@ export default function Chat() {
 
   return (
     <div className="flex h-screen bg-[#0b0f1a] text-white">
-      {/* Sidebar – desktop only */}
       <div className="hidden md:block">
         <ChatSidebar />
       </div>
 
       <main className="flex flex-col flex-1">
-        {/* Header */}
         <header className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-white/10">
           <div
             className="flex items-center gap-3 cursor-pointer"
@@ -107,7 +100,6 @@ export default function Chat() {
           <ThemeToggle />
         </header>
 
-        {/* Messages */}
         <section className="flex-1 overflow-y-auto px-3 md:px-6 py-4 space-y-4">
           {messages.map((m) => (
             <MessageBubble
@@ -122,7 +114,6 @@ export default function Chat() {
           <div ref={bottomRef} />
         </section>
 
-        {/* Input */}
         <ChatInput onSend={sendMessage} disabled={loading} />
       </main>
     </div>
