@@ -53,10 +53,13 @@ export default function Chat() {
       if (text) form.append("message", text);
       if (image) form.append("image", image);
 
+      // ✅ FIX: always read the token directly from localStorage
+      const authToken = localStorage.getItem("acinyx_token");
+
       const res = await fetch(API("/ai/chat"), {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: form,
       });
