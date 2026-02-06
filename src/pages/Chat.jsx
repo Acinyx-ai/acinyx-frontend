@@ -1,3 +1,4 @@
+// Chat.jsx
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -18,8 +19,8 @@ export default function Chat() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const t = localStorage.getItem("acinyx_token");
-    if (!t) return navigate("/login");
+    const token = localStorage.getItem("acinyx_token");
+    if (!token) navigate("/login");
   }, [navigate]);
 
   useEffect(() => {
@@ -29,6 +30,13 @@ export default function Chat() {
   async function sendMessage(text, image) {
     if ((!text || !text.trim()) && !image) return;
     if (loading) return;
+
+    const token = localStorage.getItem("acinyx_token");
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
     const id = Date.now();
 
@@ -46,27 +54,44 @@ export default function Chat() {
 
     try {
       const form = new FormData();
-      if (text) form.append("message", text);
+      if (text && text.trim()) form.append("message", text);
       if (image) form.append("image", image);
-
-      const authToken = localStorage.getItem("acinyx_token");
 
       const res = await fetch(API("/ai/chat"), {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${authToken}`,
+          Authorization: `Bearer ${token}`,
         },
         body: form,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error();
+      // ---- handle expired / invalid token cleanly
+      if (res.status === 401) {
+        localStorage.removeItem("acinyx_token");
+        navigate("/login");
+        return;
+      }
+
+      let data = null;
+
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        data = await res.json();
+      }
+
+      if (!res.ok) {
+        throw new Error(data?.detail || "Request failed");
+      }
+
+      if (!data || !data.reply) {
+        throw new Error("Invalid response");
+      }
 
       setMessages((m) => [
         ...m,
         { id: id + 1, role: "assistant", text: data.reply },
       ]);
-    } catch {
+    } catch (err) {
       setMessages((m) => [
         ...m,
         {
