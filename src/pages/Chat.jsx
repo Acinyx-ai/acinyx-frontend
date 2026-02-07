@@ -1,4 +1,3 @@
-// Chat.jsx
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -65,33 +64,23 @@ export default function Chat() {
         body: form,
       });
 
-      // ---- handle expired / invalid token cleanly
       if (res.status === 401) {
         localStorage.removeItem("acinyx_token");
         navigate("/login");
         return;
       }
 
-      let data = null;
-
-      const contentType = res.headers.get("content-type") || "";
-      if (contentType.includes("application/json")) {
-        data = await res.json();
-      }
+      const data = await res.json();
 
       if (!res.ok) {
         throw new Error(data?.detail || "Request failed");
-      }
-
-      if (!data || !data.reply) {
-        throw new Error("Invalid response");
       }
 
       setMessages((m) => [
         ...m,
         { id: id + 1, role: "assistant", text: data.reply },
       ]);
-    } catch (err) {
+    } catch {
       setMessages((m) => [
         ...m,
         {
@@ -122,6 +111,7 @@ export default function Chat() {
               Acinyx<span className="text-blue-400">.AI</span>
             </h1>
           </div>
+
           <ThemeToggle />
         </header>
 

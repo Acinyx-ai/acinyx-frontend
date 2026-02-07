@@ -5,8 +5,11 @@ const API = import.meta.env.VITE_API_URL;
 
 export default function Login() {
   const navigate = useNavigate();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -26,10 +29,12 @@ export default function Login() {
       });
 
       const data = await res.json();
+
       if (!res.ok) throw new Error(data.detail);
 
       localStorage.setItem("acinyx_token", data.access_token);
       localStorage.setItem("acinyx_plan", data.plan);
+
       navigate("/dashboard");
     } catch (e) {
       setError(e.message || "Login failed");
@@ -41,25 +46,46 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#050b18] text-white">
       <div className="w-full max-w-md p-8 bg-[#0d1b2a] rounded-xl">
+
+        <button
+          onClick={() => navigate("/")}
+          className="mb-4 text-sm text-blue-400 hover:underline"
+        >
+          ← Back to home
+        </button>
+
         <h1 className="text-2xl font-bold mb-4">Login</h1>
 
         <input
           className="w-full p-3 mb-3 text-black rounded"
-          placeholder="Username or email"
+          placeholder="Username"
+          value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
 
-        <input
-          type="password"
-          className="w-full p-3 mb-3 text-black rounded"
-          placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div className="relative mb-3">
+          <input
+            type={show ? "text" : "password"}
+            className="w-full p-3 text-black rounded pr-12"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          <button
+            type="button"
+            onClick={() => setShow((s) => !s)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-600"
+          >
+            {show ? "Hide" : "Show"}
+          </button>
+        </div>
 
         {error && <p className="text-red-400 mb-3">{error}</p>}
 
         <button
           onClick={login}
+          disabled={loading}
           className="w-full py-3 bg-green-500 text-black font-bold rounded"
         >
           {loading ? "Logging in..." : "Login"}
