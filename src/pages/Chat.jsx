@@ -1,3 +1,4 @@
+// Chat.jsx
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -17,10 +18,38 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // -----------------------------------------
+  // Load chat history on page load
+  // -----------------------------------------
   useEffect(() => {
     const token = localStorage.getItem("acinyx_token");
-    if (!token) navigate("/login");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    const historyKey = `acinyx_chat_history_${token}`;
+    const saved = localStorage.getItem(historyKey);
+
+    if (saved) {
+      try {
+        setMessages(JSON.parse(saved));
+      } catch {
+        localStorage.removeItem(historyKey);
+      }
+    }
   }, [navigate]);
+
+  // -----------------------------------------
+  // Save chat history on every change
+  // -----------------------------------------
+  useEffect(() => {
+    const token = localStorage.getItem("acinyx_token");
+    if (!token) return;
+
+    const historyKey = `acinyx_chat_history_${token}`;
+    localStorage.setItem(historyKey, JSON.stringify(messages));
+  }, [messages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -31,24 +60,19 @@ export default function Chat() {
     if (loading) return;
 
     const token = localStorage.getItem("acinyx_token");
-
     if (!token) {
       navigate("/login");
       return;
     }
 
-    const id = Date.now();
+    const userMessage = {
+      id: Date.now(),
+      role: "user",
+      text: text || "",
+      image: image ? URL.createObjectURL(image) : null,
+    };
 
-    setMessages((m) => [
-      ...m,
-      {
-        id,
-        role: "user",
-        text: text || "",
-        image: image ? URL.createObjectURL(image) : null,
-      },
-    ]);
-
+    setMessages((m) => [...m, userMessage]);
     setLoading(true);
 
     try {
@@ -72,19 +96,22 @@ export default function Chat() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data?.detail || "Request failed");
+      if (!res.ok || !data?.reply) {
+        throw new Error();
       }
 
-      setMessages((m) => [
-        ...m,
-        { id: id + 1, role: "assistant", text: data.reply },
-      ]);
+      const assistantMessage = {
+        id: Date.now() + 1,
+        role: "assistant",
+        text: data.reply,
+      };
+
+      setMessages((m) => [...m, assistantMessage]);
     } catch {
       setMessages((m) => [
         ...m,
         {
-          id: id + 2,
+          id: Date.now() + 2,
           role: "assistant",
           text: "⚠️ Something went wrong. Try again.",
         },
