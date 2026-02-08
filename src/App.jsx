@@ -1,9 +1,14 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Chat from "./pages/Chat";
+import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import Dashboard from "./pages/Dashboard";
+import Chat from "./pages/Chat";
+
+import Pricing from "./pages/Pricing";
+import Checkout from "./pages/Checkout";
+import Features from "./pages/Features";
+import HowItWorks from "./pages/HowItWorks";
 
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
@@ -12,16 +17,24 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* main routes */}
+
         <Route path="/" element={<Dashboard />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/chat" element={<Chat />} />
         <Route path="/dashboard" element={<Dashboard />} />
 
-        {/* legal pages (Paystack requirement) */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+
+        <Route path="/chat" element={<Chat />} />
+
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/checkout" element={<Checkout />} />
+
+        <Route path="/features" element={<Features />} />
+        <Route path="/how-it-works" element={<HowItWorks />} />
+
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
+
       </Routes>
     </BrowserRouter>
   );
