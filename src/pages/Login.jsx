@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_URL;
@@ -6,31 +6,51 @@ const API = import.meta.env.VITE_API_URL;
 export default function Login() {
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState("");
+  const [loginId, setLoginId] = useState(""); // username OR email
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // If already logged in, go to dashboard
+  useEffect(() => {
+    const token = localStorage.getItem("acinyx_token");
+    if (token) navigate("/dashboard");
+  }, [navigate]);
+
   async function login() {
+    if (!loginId || !password) {
+      setError("Enter your username/email and password");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
     try {
       const body = new URLSearchParams();
-      body.append("username", username);
+      body.append("username", loginId); // IMPORTANT (backend expects this key)
       body.append("password", password);
 
       const res = await fetch(`${API}/token`, {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
         body,
       });
 
-      const data = await res.json();
+      let data = null;
+      const ct = res.headers.get("content-type") || "";
 
-      if (!res.ok) throw new Error(data.detail);
+      if (ct.includes("application/json")) {
+        data = await res.json();
+      }
+
+      if (!res.ok) {
+        throw new Error(data?.detail || "Login failed");
+      }
 
       localStorage.setItem("acinyx_token", data.access_token);
       localStorage.setItem("acinyx_plan", data.plan);
@@ -45,7 +65,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#050b18] text-white">
-      <div className="w-full max-w-md p-8 bg-[#0d1b2a] rounded-xl">
+      <div className="w-full max-w-md p-8 bg-[#0d1b2a] rounded-xl border border-white/10">
 
         <button
           onClick={() => navigate("/")}
@@ -58,15 +78,15 @@ export default function Login() {
 
         <input
           className="w-full p-3 mb-3 text-black rounded"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Username or email"
+          value={loginId}
+          onChange={(e) => setLoginId(e.target.value)}
         />
 
         <div className="relative mb-3">
           <input
             type={show ? "text" : "password"}
-            className="w-full p-3 text-black rounded pr-12"
+            className="w-full p-3 text-black rounded pr-14"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -81,12 +101,16 @@ export default function Login() {
           </button>
         </div>
 
-        {error && <p className="text-red-400 mb-3">{error}</p>}
+        {error && (
+          <p className="text-red-400 mb-3 text-sm">
+            {error}
+          </p>
+        )}
 
         <button
           onClick={login}
           disabled={loading}
-          className="w-full py-3 bg-green-500 text-black font-bold rounded"
+          className="w-full py-3 bg-green-500 text-black font-bold rounded disabled:opacity-60"
         >
           {loading ? "Logging in..." : "Login"}
         </button>
