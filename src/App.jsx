@@ -1,40 +1,25 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// Public pages
-import Home from "./pages/Home";
-import Features from "./pages/Features";
-import HowItWorks from "./pages/HowItWorks";
-import Pricing from "./pages/Pricing";
-
-// Auth pages
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-
-// App pages
-import Dashboard from "./pages/Dashboard";
 import Chat from "./pages/Chat";
-import Poster from "./pages/Poster";
-import Checkout from "./pages/Checkout"; // MUST MATCH FILE NAME EXACTLY
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Marketing */}
-        <Route path="/" element={<Home />} />
-        <Route path="/features" element={<Features />} />
-        <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/pricing" element={<Pricing />} />
-
-        {/* Auth */}
+        {/* main routes */}
+        <Route path="/" element={<Dashboard />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-
-        {/* App */}
-        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/chat" element={<Chat />} />
-        <Route path="/poster" element={<Poster />} />
-        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+
+        {/* legal pages (Paystack requirement) */}
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
       </Routes>
     </BrowserRouter>
   );

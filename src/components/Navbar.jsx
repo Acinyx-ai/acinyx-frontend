@@ -24,13 +24,29 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-6 text-sm">
-          <Link to="/features" className="hover:text-green-400">Features</Link>
-          <Link to="/how-it-works" className="hover:text-green-400">How it works</Link>
-          <Link to="/pricing" className="hover:text-green-400">Pricing</Link>
+          <Link to="/features" className="hover:text-green-400">
+            Features
+          </Link>
+          <Link to="/how-it-works" className="hover:text-green-400">
+            How it works
+          </Link>
+          <Link to="/pricing" className="hover:text-green-400">
+            Pricing
+          </Link>
+
+          {/* legal links (important for Paystack) */}
+          <Link to="/terms" className="hover:text-green-400">
+            Terms
+          </Link>
+          <Link to="/privacy" className="hover:text-green-400">
+            Privacy
+          </Link>
 
           {loggedIn ? (
             <>
-              <Link to="/dashboard" className="hover:text-green-400">Dashboard</Link>
+              <Link to="/dashboard" className="hover:text-green-400">
+                Dashboard
+              </Link>
               <button
                 onClick={logout}
                 className="px-4 py-2 bg-red-500/90 hover:bg-red-500 text-black rounded-md font-semibold"
@@ -40,7 +56,9 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link to="/login" className="hover:text-green-400">Login</Link>
+              <Link to="/login" className="hover:text-green-400">
+                Login
+              </Link>
               <Link
                 to="/signup"
                 className="px-4 py-2 bg-green-500 hover:bg-green-400 text-black rounded-md font-semibold"

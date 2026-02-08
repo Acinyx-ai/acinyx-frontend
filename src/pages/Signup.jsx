@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -13,10 +13,11 @@ export default function Signup() {
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 🚫 Prevent signup if already logged in
+  // prevent signup if already logged in
   useEffect(() => {
     const token = localStorage.getItem("acinyx_token");
     if (token) navigate("/dashboard");
@@ -38,6 +39,9 @@ export default function Signup() {
     }
     if (form.password.length < 6) {
       return "Password must be at least 6 characters";
+    }
+    if (!accepted) {
+      return "You must agree to the Terms and Privacy Policy";
     }
     return null;
   }
@@ -62,7 +66,6 @@ export default function Signup() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Signup failed");
 
-      // ✅ Redirect to login (clean flow)
       navigate("/login");
     } catch (err) {
       setError(err.message || "Signup failed");
@@ -74,9 +77,10 @@ export default function Signup() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#050b18] text-white">
       <div className="w-full max-w-md p-8 bg-[#0d1b2a] rounded-xl shadow-lg border border-white/10">
+
         <h1 className="text-2xl font-bold mb-1">Create Account</h1>
         <p className="text-sm text-gray-400 mb-6">
-          Access AI chat, posters, and automation
+          Access AI chat, posters and automation
         </p>
 
         <label className="text-sm text-gray-300">Username</label>
@@ -117,6 +121,34 @@ export default function Signup() {
           </button>
         </div>
 
+        {/* Terms acceptance */}
+        <div className="flex items-start gap-2 text-sm text-gray-300 mb-4">
+          <input
+            type="checkbox"
+            checked={accepted}
+            onChange={(e) => setAccepted(e.target.checked)}
+            className="mt-1"
+          />
+          <span>
+            I agree to the{" "}
+            <Link
+              to="/terms"
+              target="_blank"
+              className="text-green-400 underline"
+            >
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link
+              to="/privacy"
+              target="_blank"
+              className="text-green-400 underline"
+            >
+              Privacy Policy
+            </Link>
+          </span>
+        </div>
+
         {error && (
           <p className="text-red-400 text-sm mb-3">
             ❌ {error}
@@ -144,6 +176,7 @@ export default function Signup() {
             Login
           </span>
         </p>
+
       </div>
     </div>
   );
