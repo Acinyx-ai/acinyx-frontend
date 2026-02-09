@@ -6,7 +6,7 @@ const API = import.meta.env.VITE_API_URL;
 export default function Login() {
   const navigate = useNavigate();
 
-  const [loginId, setLoginId] = useState(""); // username OR email
+  const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
 
@@ -16,7 +16,16 @@ export default function Login() {
   // If already logged in, go to dashboard
   useEffect(() => {
     const token = localStorage.getItem("acinyx_token");
-    if (token) navigate("/dashboard");
+    if (token) {
+      navigate("/dashboard");
+      return;
+    }
+
+    // restore last used login id (nice UX)
+    const savedLoginId = localStorage.getItem("acinyx_login_id");
+    if (savedLoginId) {
+      setLoginId(savedLoginId);
+    }
   }, [navigate]);
 
   async function login() {
@@ -30,7 +39,7 @@ export default function Login() {
 
     try {
       const body = new URLSearchParams();
-      body.append("username", loginId); // IMPORTANT (backend expects this key)
+      body.append("username", loginId); // backend expects "username"
       body.append("password", password);
 
       const res = await fetch(`${API}/token`, {
@@ -52,8 +61,12 @@ export default function Login() {
         throw new Error(data?.detail || "Login failed");
       }
 
+      // persist session
       localStorage.setItem("acinyx_token", data.access_token);
       localStorage.setItem("acinyx_plan", data.plan);
+
+      // store last login id for convenience
+      localStorage.setItem("acinyx_login_id", loginId);
 
       navigate("/dashboard");
     } catch (e) {
@@ -66,13 +79,6 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#050b18] text-white">
       <div className="w-full max-w-md p-8 bg-[#0d1b2a] rounded-xl border border-white/10">
-
-        <button
-          onClick={() => navigate("/")}
-          className="mb-4 text-sm text-blue-400 hover:underline"
-        >
-          ← Back to home
-        </button>
 
         <h1 className="text-2xl font-bold mb-4">Login</h1>
 
@@ -115,7 +121,6 @@ export default function Login() {
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        {/* ✅ Added link to signup (nothing else changed) */}
         <p className="text-sm text-gray-400 mt-4 text-center">
           Don’t have an account?{" "}
           <span
