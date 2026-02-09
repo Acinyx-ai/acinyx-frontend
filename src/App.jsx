@@ -9,6 +9,7 @@ import Pricing from "./pages/Pricing";
 import Checkout from "./pages/Checkout";
 import Features from "./pages/Features";
 import HowItWorks from "./pages/HowItWorks";
+import Poster from "./pages/Poster";   // ✅ added
 
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
@@ -25,6 +26,9 @@ export default function App() {
         <Route path="/signup" element={<Signup />} />
 
         <Route path="/chat" element={<Chat />} />
+
+        {/* ✅ poster page */}
+        <Route path="/poster" element={<Poster />} />
 
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/checkout" element={<Checkout />} />
