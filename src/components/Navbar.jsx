@@ -3,17 +3,24 @@ import { useEffect, useState } from "react";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(
+    !!localStorage.getItem("acinyx_token")
+  );
 
   useEffect(() => {
-    setLoggedIn(!!localStorage.getItem("acinyx_token"));
+    const sync = () => {
+      setLoggedIn(!!localStorage.getItem("acinyx_token"));
+    };
+
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
   }, []);
 
   function logout() {
     localStorage.removeItem("acinyx_token");
     localStorage.removeItem("acinyx_plan");
     navigate("/login");
-    window.location.reload();
+    setLoggedIn(false);
   }
 
   return (
@@ -34,7 +41,6 @@ export default function Navbar() {
             Pricing
           </Link>
 
-          {/* legal links (important for Paystack) */}
           <Link to="/terms" className="hover:text-green-400">
             Terms
           </Link>

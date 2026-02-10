@@ -13,7 +13,6 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // If already logged in, go to dashboard
   useEffect(() => {
     const token = localStorage.getItem("acinyx_token");
     if (token) {
@@ -21,11 +20,8 @@ export default function Login() {
       return;
     }
 
-    // restore last used login id (nice UX)
     const savedLoginId = localStorage.getItem("acinyx_login_id");
-    if (savedLoginId) {
-      setLoginId(savedLoginId);
-    }
+    if (savedLoginId) setLoginId(savedLoginId);
   }, [navigate]);
 
   async function login() {
@@ -39,7 +35,7 @@ export default function Login() {
 
     try {
       const body = new URLSearchParams();
-      body.append("username", loginId); // backend expects "username"
+      body.append("username", loginId);
       body.append("password", password);
 
       const res = await fetch(`${API}/token`, {
@@ -61,11 +57,8 @@ export default function Login() {
         throw new Error(data?.detail || "Login failed");
       }
 
-      // persist session
       localStorage.setItem("acinyx_token", data.access_token);
       localStorage.setItem("acinyx_plan", data.plan);
-
-      // store last login id for convenience
       localStorage.setItem("acinyx_login_id", loginId);
 
       navigate("/dashboard");
