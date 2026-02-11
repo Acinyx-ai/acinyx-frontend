@@ -4,39 +4,47 @@ import Footer from "../components/Footer";
 
 const API = import.meta.env.VITE_API_URL;
 
+/*
+  IMPORTANT:
+  Your Paystack account is Kenyan.
+  Paystack charges in KES and expects the amount in the smallest unit.
+
+  So:
+  Display -> KES
+  Send to backend -> KES * 100
+*/
+
 const PLAN_DETAILS = {
   free: {
     name: "Free",
-    price: "$0",
+    price: "KES 0",
     description: "Limited access for testing the platform.",
   },
   basic: {
     name: "Basic",
-    price: "$5 / month",
+    price: "KES 500 / month",
     description: "Perfect for starters. No watermark on posters.",
   },
   pro: {
     name: "Pro",
-    price: "$15 / month",
+    price: "KES 1500 / month",
     description: "For professionals and growing businesses.",
   },
   mega: {
     name: "Mega",
-    price: "$30 / month",
+    price: "KES 3000 / month",
     description: "Unlimited power for teams and agencies.",
   },
 };
 
 /*
-  Amounts MUST be sent in the smallest currency unit.
-  (Your backend expects `amount`)
-
-  We keep this simple and consistent with your prices.
+  These are REAL prices in KES.
+  We convert to smallest unit for Paystack by multiplying by 100.
 */
 const PLAN_AMOUNTS = {
-  basic: 500,  // $5.00  -> 500
-  pro: 1500,   // $15.00 -> 1500
-  mega: 3000,  // $30.00 -> 3000
+  basic: 500 * 100,
+  pro: 1500 * 100,
+  mega: 3000 * 100,
 };
 
 export default function Checkout() {
@@ -87,7 +95,6 @@ export default function Checkout() {
         return;
       }
 
-      // ✅ redirect to Paystack
       if (data.authorization_url) {
         window.location.href = data.authorization_url;
       } else {
