@@ -18,12 +18,6 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // ✅ NEW
-  const [activeSession, setActiveSession] = useState(null);
-
-  // -----------------------------------------
-  // Load chat history on page load
-  // -----------------------------------------
   useEffect(() => {
     const token = localStorage.getItem("acinyx_token");
     if (!token) {
@@ -43,9 +37,6 @@ export default function Chat() {
     }
   }, [navigate]);
 
-  // -----------------------------------------
-  // Save chat history on every change
-  // -----------------------------------------
   useEffect(() => {
     const token = localStorage.getItem("acinyx_token");
     if (!token) return;
@@ -79,29 +70,7 @@ export default function Chat() {
     setLoading(true);
 
     try {
-      let sessionId = activeSession;
-
-      if (!sessionId) {
-        const sres = await fetch(API("/chat/sessions"), {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (sres.status === 401) {
-          localStorage.removeItem("acinyx_token");
-          navigate("/login");
-          return;
-        }
-
-        const s = await sres.json();
-        sessionId = s.id;
-        setActiveSession(s.id);
-      }
-
       const form = new FormData();
-      form.append("session_id", sessionId);
 
       if (text && text.trim()) form.append("message", text);
       if (image) form.append("image", image);
