@@ -27,6 +27,18 @@ const PLAN_DETAILS = {
   },
 };
 
+/*
+  Amounts MUST be sent in the smallest currency unit.
+  (Your backend expects `amount`)
+
+  We keep this simple and consistent with your prices.
+*/
+const PLAN_AMOUNTS = {
+  basic: 500,  // $5.00  -> 500
+  pro: 1500,   // $15.00 -> 1500
+  mega: 3000,  // $30.00 -> 3000
+};
+
 export default function Checkout() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -42,18 +54,31 @@ export default function Checkout() {
       return;
     }
 
+    // Free plan does not go to Paystack
+    if (plan === "free") {
+      alert("Free plan does not require payment.");
+      return;
+    }
+
+    const amount = PLAN_AMOUNTS[plan];
+
+    if (!amount) {
+      alert("Invalid plan amount");
+      return;
+    }
+
     try {
-      const res = await fetch(
-        `${API}/payments/paystack/init`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ plan }),
-        }
-      );
+      const res = await fetch(`${API}/payments/paystack/init`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          plan,
+          amount,
+        }),
+      });
 
       const data = await res.json();
 
@@ -62,8 +87,12 @@ export default function Checkout() {
         return;
       }
 
-      // redirect to Paystack checkout page
-      window.location.href = data.authorization_url;
+      // ✅ redirect to Paystack
+      if (data.authorization_url) {
+        window.location.href = data.authorization_url;
+      } else {
+        alert("Paystack did not return a checkout URL");
+      }
 
     } catch (err) {
       alert("Unable to start payment");
