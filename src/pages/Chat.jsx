@@ -18,6 +18,9 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // ✅ soft upgrade notice
+  const [showUpgradeNotice, setShowUpgradeNotice] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem("acinyx_token");
     if (!token) {
@@ -47,7 +50,7 @@ export default function Chat() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, loading, showUpgradeNotice]);
 
   async function sendMessage(text, image) {
     if ((!text || !text.trim()) && !image) return;
@@ -89,11 +92,19 @@ export default function Chat() {
         return;
       }
 
+      // ✅ soft limit handling
+      if (res.status === 403) {
+        setShowUpgradeNotice(true);
+        return;
+      }
+
       const data = await res.json();
 
       if (!res.ok || !data?.reply) {
         throw new Error();
       }
+
+      setShowUpgradeNotice(false);
 
       const assistantMessage = {
         id: Date.now() + 1,
@@ -114,6 +125,11 @@ export default function Chat() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function copyToClipboard(text) {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
   }
 
   return (
@@ -137,21 +153,63 @@ export default function Chat() {
           <ThemeToggle />
         </header>
 
+        {/* ✅ soft upgrade notice */}
+        {showUpgradeNotice && (
+          <div className="mx-3 md:mx-6 mt-4 mb-2 rounded-lg border border-yellow-400/40 bg-yellow-400/10 px-4 py-3 text-sm flex items-center justify-between">
+            <span className="text-yellow-300">
+              You’ve reached your chat limit. Upgrade your plan to continue.
+            </span>
+            <button
+              onClick={() => navigate("/pricing")}
+              className="ml-4 px-3 py-1.5 rounded bg-yellow-400 text-black font-semibold text-xs"
+            >
+              Upgrade
+            </button>
+          </div>
+        )}
+
         <section className="flex-1 overflow-y-auto px-3 md:px-6 py-4 space-y-4">
-          {messages.map((m) => (
-            <MessageBubble
-              key={m.id}
-              role={m.role}
-              text={m.text}
-              image={m.image}
-            />
-          ))}
+          {messages.map((m) => {
+            // ✅ special layout for assistant replies
+            if (m.role === "assistant") {
+              return (
+                <div
+                  key={m.id}
+                  className="relative rounded-xl bg-indigo-500/10 border border-indigo-400/20 p-2"
+                >
+                  {/* copy button */}
+                  <button
+                    onClick={() => copyToClipboard(m.text)}
+                    title="Copy"
+                    className="absolute -top-3 right-2 w-7 h-7 rounded-full bg-indigo-500 text-black flex items-center justify-center text-sm hover:bg-indigo-400"
+                  >
+                    📋
+                  </button>
+
+                  <MessageBubble
+                    role={m.role}
+                    text={m.text}
+                    image={m.image}
+                  />
+                </div>
+              );
+            }
+
+            return (
+              <MessageBubble
+                key={m.id}
+                role={m.role}
+                text={m.text}
+                image={m.image}
+              />
+            );
+          })}
 
           {loading && <MessageBubble role="assistant" loading />}
           <div ref={bottomRef} />
         </section>
 
-        <ChatInput onSend={sendMessage} disabled={loading} />
+        <ChatInput onSend={sendMessage} disabled={loading || showUpgradeNotice} />
       </main>
     </div>
   );
