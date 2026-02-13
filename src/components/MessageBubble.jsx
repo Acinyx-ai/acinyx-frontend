@@ -1,5 +1,6 @@
 function linkify(text) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
+
   return text.split(urlRegex).map((part, i) =>
     part.match(urlRegex) ? (
       <a
@@ -21,7 +22,11 @@ function copy(text) {
   navigator.clipboard.writeText(text);
 }
 
-// Split text into normal text + fenced code blocks
+/*
+  Split message into:
+  - normal text
+  - fenced code blocks (``` ... ```)
+*/
 function parseBlocks(text) {
   const regex = /```([\s\S]*?)```/g;
   const parts = [];
@@ -54,6 +59,50 @@ function parseBlocks(text) {
   return parts;
 }
 
+/*
+  Remove markdown headings like:
+  ### Title
+  ## Title
+  # Title
+
+  and render them as clean section titles.
+*/
+function renderFormattedText(block, key) {
+  const lines = block.split("\n");
+
+  return (
+    <div key={key} className="space-y-2">
+      {lines.map((line, i) => {
+        const headingMatch = line.match(/^\s*#{1,6}\s+(.*)$/);
+
+        if (headingMatch) {
+          return (
+            <div
+              key={i}
+              className="font-semibold text-white text-sm md:text-base"
+            >
+              {headingMatch[1]}
+            </div>
+          );
+        }
+
+        if (!line.trim()) {
+          return <div key={i} className="h-2" />;
+        }
+
+        return (
+          <p
+            key={i}
+            className="whitespace-pre-wrap leading-relaxed"
+          >
+            {linkify(line)}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function MessageBubble({ role, text, image, loading }) {
   const isUser = role === "user";
 
@@ -63,7 +112,9 @@ export default function MessageBubble({ role, text, image, loading }) {
     <div className={`max-w-[75%] ${isUser ? "ml-auto" : ""}`}>
       <div
         className={`px-4 py-3 rounded-xl space-y-3 ${
-          isUser ? "bg-blue-500 text-white" : "bg-white/10 text-white"
+          isUser
+            ? "bg-blue-500 text-white"
+            : "bg-white/10 text-white"
         }`}
       >
         {image && (
@@ -78,35 +129,55 @@ export default function MessageBubble({ role, text, image, loading }) {
           <span className="opacity-60 animate-pulse">Thinking…</span>
         ) : (
           blocks.map((b, i) => {
+            // -----------------------
+            // CODE / SCRIPT BLOCK
+            // -----------------------
             if (b.type === "code") {
               return (
                 <div
                   key={i}
-                  className="relative rounded-lg bg-[#0b1226] border border-indigo-400/20 p-3 font-mono text-sm overflow-x-auto"
+                  className="
+                    relative
+                    rounded-lg
+                    bg-[#060b18]
+                    border border-indigo-400/30
+                    p-3
+                    font-mono
+                    text-sm
+                    text-indigo-100
+                    overflow-x-auto
+                  "
                 >
                   <button
                     onClick={() => copy(b.value)}
-                    className="absolute top-2 right-2 px-2 py-1 text-xs rounded bg-indigo-500 text-black hover:bg-indigo-400"
+                    className="
+                      absolute
+                      top-2
+                      right-2
+                      px-2
+                      py-1
+                      text-xs
+                      rounded
+                      bg-indigo-500
+                      text-black
+                      hover:bg-indigo-400
+                    "
                     title="Copy"
                   >
                     Copy
                   </button>
 
-                  <pre className="whitespace-pre-wrap leading-relaxed">
-                    {b.value}
+                  <pre className="whitespace-pre leading-relaxed">
+{b.value}
                   </pre>
                 </div>
               );
             }
 
-            return (
-              <p
-                key={i}
-                className="whitespace-pre-wrap leading-relaxed"
-              >
-                {linkify(b.value)}
-              </p>
-            );
+            // -----------------------
+            // NORMAL TEXT BLOCK
+            // -----------------------
+            return renderFormattedText(b.value, i);
           })
         )}
       </div>
