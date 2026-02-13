@@ -12,14 +12,16 @@ export default function Pricing() {
       <h1 className="text-4xl font-bold text-center mb-4">
         Upgrade Your Plan
       </h1>
+
       <p className="text-center text-gray-400 mb-14">
         AI chat & AI-generated posters built for real business use.
       </p>
 
       <div className="grid md:grid-cols-4 gap-8">
+
         <Plan
           title="Free"
-          price="$0"
+          price="KES 0"
           features={[
             "5 AI chats",
             "2 AI-generated posters",
@@ -31,7 +33,7 @@ export default function Pricing() {
 
         <Plan
           title="Basic"
-          price="$5 / month"
+          price="KES 500 / month"
           highlight
           features={[
             "100 AI chats",
@@ -46,7 +48,7 @@ export default function Pricing() {
 
         <Plan
           title="Pro"
-          price="$15 / month"
+          price="KES 1500 / month"
           features={[
             "500 AI chats",
             "100 AI posters",
@@ -59,7 +61,7 @@ export default function Pricing() {
 
         <Plan
           title="Mega"
-          price="$30 / month"
+          price="KES 3000 / month"
           mega
           features={[
             "Unlimited AI chats",
@@ -71,12 +73,22 @@ export default function Pricing() {
           button="Get Mega"
           onClick={() => select("mega")}
         />
+
       </div>
     </section>
   );
 }
 
-function Plan({ title, price, features, button, onClick, disabled, highlight, mega }) {
+function Plan({
+  title,
+  price,
+  features,
+  button,
+  onClick,
+  disabled,
+  highlight,
+  mega,
+}) {
   return (
     <div
       className={`p-8 rounded-xl border ${
