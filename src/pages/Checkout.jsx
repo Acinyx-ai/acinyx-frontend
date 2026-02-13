@@ -5,13 +5,10 @@ import Footer from "../components/Footer";
 const API = import.meta.env.VITE_API_URL;
 
 /*
-  IMPORTANT:
-  Your Paystack account is Kenyan.
-  Paystack charges in KES and expects the amount in the smallest unit.
+  IMPORTANT (your current backend logic):
 
-  So:
   Display -> KES
-  Send to backend -> KES * 100
+  Send to backend -> KES (NO *100)
 */
 
 const PLAN_DETAILS = {
@@ -38,13 +35,12 @@ const PLAN_DETAILS = {
 };
 
 /*
-  These are REAL prices in KES.
-  We convert to smallest unit for Paystack by multiplying by 100.
+  Amounts sent exactly as KES
 */
 const PLAN_AMOUNTS = {
-  basic: 500 * 100,
-  pro: 1500 * 100,
-  mega: 3000 * 100,
+  basic: 500,
+  pro: 1500,
+  mega: 3000,
 };
 
 export default function Checkout() {
@@ -62,7 +58,6 @@ export default function Checkout() {
       return;
     }
 
-    // Free plan does not go to Paystack
     if (plan === "free") {
       alert("Free plan does not require payment.");
       return;
@@ -101,7 +96,7 @@ export default function Checkout() {
         alert("Paystack did not return a checkout URL");
       }
 
-    } catch (err) {
+    } catch {
       alert("Unable to start payment");
     }
   }
@@ -130,6 +125,7 @@ export default function Checkout() {
 
       <main className="max-w-3xl mx-auto px-6 py-24">
         <h1 className="text-4xl font-bold mb-4">Checkout</h1>
+
         <p className="text-gray-400 mb-10">
           You are about to subscribe to the{" "}
           <strong>{planData.name}</strong> plan.
