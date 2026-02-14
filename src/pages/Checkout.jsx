@@ -5,10 +5,9 @@ import Footer from "../components/Footer";
 const API = import.meta.env.VITE_API_URL;
 
 /*
-  IMPORTANT (your current backend logic):
-
+  Paystack (KES account)
   Display -> KES
-  Send to backend -> KES (NO *100)
+  Send -> KES * 100 (smallest unit)
 */
 
 const PLAN_DETAILS = {
@@ -34,9 +33,6 @@ const PLAN_DETAILS = {
   },
 };
 
-/*
-  Amounts sent exactly as KES
-*/
 const PLAN_AMOUNTS = {
   basic: 500,
   pro: 1500,
@@ -63,12 +59,15 @@ export default function Checkout() {
       return;
     }
 
-    const amount = PLAN_AMOUNTS[plan];
+    const baseAmount = PLAN_AMOUNTS[plan];
 
-    if (!amount) {
+    if (!baseAmount) {
       alert("Invalid plan amount");
       return;
     }
+
+    // ✅ Convert to smallest unit
+    const amount = baseAmount * 100;
 
     try {
       const res = await fetch(`${API}/payments/paystack/init`, {
@@ -84,6 +83,13 @@ export default function Checkout() {
       });
 
       const data = await res.json();
+
+      if (res.status === 401) {
+        localStorage.removeItem("acinyx_token");
+        alert("Session expired. Please login again.");
+        navigate("/login");
+        return;
+      }
 
       if (!res.ok) {
         alert(data?.detail || "Payment initialization failed");
