@@ -1,183 +1,153 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState,useEffect } from "react";
+import { useNavigate,Link } from "react-router-dom";
 
-const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API=import.meta.env.VITE_API_URL;
 
-export default function Signup() {
-  const navigate = useNavigate();
+export default function Signup(){
 
-  const [form, setForm] = useState({
-    username: "",
-    email: "",
-    password: "",
-  });
+const navigate=useNavigate();
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [accepted, setAccepted] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+const[form,setForm]=useState({
 
-  // prevent signup if already logged in
-  useEffect(() => {
-    const token = localStorage.getItem("acinyx_token");
-    if (token) navigate("/dashboard");
-  }, [navigate]);
+username:"",
+email:"",
+password:""
 
-  function update(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
+});
 
-  function validate() {
-    if (!form.username || !form.email || !form.password) {
-      return "All fields are required";
-    }
-    if (form.username.length < 3) {
-      return "Username must be at least 3 characters";
-    }
-    if (!form.email.includes("@")) {
-      return "Enter a valid email address";
-    }
-    if (form.password.length < 6) {
-      return "Password must be at least 6 characters";
-    }
-    if (!accepted) {
-      return "You must agree to the Terms and Privacy Policy";
-    }
-    return null;
-  }
+const[accepted,setAccepted]=useState(false);
 
-  async function submit() {
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
+const[error,setError]=useState("");
 
-    setLoading(true);
-    setError("");
+const[loading,setLoading]=useState(false);
 
-    try {
-      const res = await fetch(`${API}/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+useEffect(()=>{
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Signup failed");
+const token=localStorage.getItem("acinyx_token");
 
-      navigate("/login");
-    } catch (err) {
-      setError(err.message || "Signup failed");
-    } finally {
-      setLoading(false);
-    }
-  }
+if(token) navigate("/dashboard");
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[#050b18] text-white">
-      <div className="w-full max-w-md p-8 bg-[#0d1b2a] rounded-xl shadow-lg border border-white/10">
+},[]);
 
-        <h1 className="text-2xl font-bold mb-1">Create Account</h1>
-        <p className="text-sm text-gray-400 mb-6">
-          Access AI chat, posters and automation
-        </p>
 
-        <label className="text-sm text-gray-300">Username</label>
-        <input
-          name="username"
-          value={form.username}
-          onChange={update}
-          className="w-full p-3 mb-4 rounded text-black"
-          placeholder="Choose a username"
-        />
+function update(e){
 
-        <label className="text-sm text-gray-300">Email</label>
-        <input
-          name="email"
-          type="email"
-          value={form.email}
-          onChange={update}
-          className="w-full p-3 mb-4 rounded text-black"
-          placeholder="you@email.com"
-        />
+setForm({...form,[e.target.name]:e.target.value});
 
-        <label className="text-sm text-gray-300">Password</label>
-        <div className="relative mb-3">
-          <input
-            type={showPassword ? "text" : "password"}
-            name="password"
-            value={form.password}
-            onChange={update}
-            className="w-full p-3 rounded text-black pr-16"
-            placeholder="Create a strong password"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-3 text-sm text-gray-600"
-          >
-            {showPassword ? "Hide" : "Show"}
-          </button>
-        </div>
+}
 
-        {/* Terms acceptance */}
-        <div className="flex items-start gap-2 text-sm text-gray-300 mb-4">
-          <input
-            type="checkbox"
-            checked={accepted}
-            onChange={(e) => setAccepted(e.target.checked)}
-            className="mt-1"
-          />
-          <span>
-            I agree to the{" "}
-            <Link
-              to="/terms"
-              target="_blank"
-              className="text-green-400 underline"
-            >
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link
-              to="/privacy"
-              target="_blank"
-              className="text-green-400 underline"
-            >
-              Privacy Policy
-            </Link>
-          </span>
-        </div>
 
-        {error && (
-          <p className="text-red-400 text-sm mb-3">
-            ❌ {error}
-          </p>
-        )}
+async function submit(){
 
-        <button
-          onClick={submit}
-          disabled={loading}
-          className={`w-full py-3 font-bold rounded ${
-            loading
-              ? "bg-gray-500 cursor-not-allowed"
-              : "bg-green-500 text-black"
-          }`}
-        >
-          {loading ? "Creating account..." : "Sign Up"}
-        </button>
+if(!accepted){
 
-        <p className="text-sm text-gray-400 mt-4 text-center">
-          Already have an account?{" "}
-          <span
-            onClick={() => navigate("/login")}
-            className="text-green-400 cursor-pointer"
-          >
-            Login
-          </span>
-        </p>
+setError("Accept terms first");
 
-      </div>
-    </div>
-  );
+return;
+
+}
+
+setLoading(true);
+
+try{
+
+const res=await fetch(`${API}/signup`,{
+
+method:"POST",
+
+headers:{"Content-Type":"application/json"},
+
+body:JSON.stringify(form)
+
+});
+
+const data=await res.json();
+
+if(!res.ok) throw new Error(data.detail);
+
+
+// AUTO LOGIN
+
+const body=new URLSearchParams();
+
+body.append("username",form.username);
+
+body.append("password",form.password);
+
+const loginRes=await fetch(`${API}/token`,{
+
+method:"POST",
+
+headers:{"Content-Type":"application/x-www-form-urlencoded"},
+
+body
+
+});
+
+const loginData=await loginRes.json();
+
+localStorage.setItem("acinyx_token",loginData.access_token);
+
+localStorage.setItem("acinyx_plan",loginData.plan);
+
+localStorage.setItem("acinyx_username",form.username);
+
+navigate("/dashboard");
+
+}
+
+catch(e){
+
+setError(e.message);
+
+}
+
+setLoading(false);
+
+}
+
+
+return(
+
+<div className="min-h-screen flex items-center justify-center bg-[#050b18] text-white">
+
+<div className="p-8 bg-[#0d1b2a] rounded w-96">
+
+
+<h1>Create Account</h1>
+
+
+<input name="username" onChange={update} placeholder="Username" className="w-full p-3 text-black"/>
+
+
+<input name="email" onChange={update} placeholder="Email" className="w-full p-3 text-black"/>
+
+
+<input name="password" type="password" onChange={update} placeholder="Password" className="w-full p-3 text-black"/>
+
+
+<label>
+
+<input type="checkbox" onChange={e=>setAccepted(e.target.checked)}/>
+
+Accept Terms
+
+</label>
+
+
+<button onClick={submit}>
+
+{loading?"Creating":"Signup"}
+
+</button>
+
+
+{error}
+
+</div>
+
+</div>
+
+);
+
 }

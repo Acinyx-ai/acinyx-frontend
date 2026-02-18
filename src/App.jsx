@@ -14,75 +14,205 @@ import Poster from "./pages/Poster";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 
-/* simple route guard */
+
+
+/* PRODUCTION SAFE ROUTE GUARD */
 function Protected({ children }) {
+
   const token = localStorage.getItem("acinyx_token");
-  if (!token) return <Navigate to="/login" replace />;
+
+  if (!token) {
+
+    return <Navigate to="/login" replace />;
+
+  }
+
   return children;
+
 }
 
+
+
+/* PREVENT LOGIN PAGE IF ALREADY LOGGED IN */
+
+function PublicOnly({ children }) {
+
+  const token = localStorage.getItem("acinyx_token");
+
+  if (token) {
+
+    return <Navigate to="/dashboard" replace />;
+
+  }
+
+  return children;
+
+}
+
+
+
 export default function App() {
+
   return (
+
     <BrowserRouter>
+
       <Routes>
 
+
+        {/* DEFAULT */}
+
         <Route
+
           path="/"
-          element={
-            <Protected>
-              <Dashboard />
-            </Protected>
-          }
+
+          element={<Navigate to="/dashboard" replace />}
+
         />
 
+
+        {/* DASHBOARD */}
+
         <Route
+
           path="/dashboard"
+
           element={
+
             <Protected>
+
               <Dashboard />
+
             </Protected>
+
           }
+
         />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+
+        {/* LOGIN */}
 
         <Route
+
+          path="/login"
+
+          element={
+
+            <PublicOnly>
+
+              <Login />
+
+            </PublicOnly>
+
+          }
+
+        />
+
+
+        {/* SIGNUP */}
+
+        <Route
+
+          path="/signup"
+
+          element={
+
+            <PublicOnly>
+
+              <Signup />
+
+            </PublicOnly>
+
+          }
+
+        />
+
+
+        {/* CHAT */}
+
+        <Route
+
           path="/chat"
+
           element={
+
             <Protected>
+
               <Chat />
+
             </Protected>
+
           }
+
         />
 
+
+        {/* POSTER */}
+
         <Route
+
           path="/poster"
+
           element={
+
             <Protected>
+
               <Poster />
+
             </Protected>
+
           }
+
         />
+
+
+        {/* CHECKOUT */}
+
+        <Route
+
+          path="/checkout"
+
+          element={
+
+            <Protected>
+
+              <Checkout />
+
+            </Protected>
+
+          }
+
+        />
+
+
+        {/* PUBLIC */}
 
         <Route path="/pricing" element={<Pricing />} />
 
-        <Route
-          path="/checkout"
-          element={
-            <Protected>
-              <Checkout />
-            </Protected>
-          }
-        />
-
         <Route path="/features" element={<Features />} />
+
         <Route path="/how-it-works" element={<HowItWorks />} />
 
         <Route path="/terms" element={<Terms />} />
+
         <Route path="/privacy" element={<Privacy />} />
 
+
+        {/* FALLBACK */}
+
+        <Route
+
+          path="*"
+
+          element={<Navigate to="/dashboard" replace />}
+
+        />
+
+
       </Routes>
+
     </BrowserRouter>
+
   );
+
 }
