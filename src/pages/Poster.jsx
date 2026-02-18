@@ -7,314 +7,425 @@ import PosterImageUpload from "../components/PosterImageUpload.jsx";
 
 const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
+
 export default function Poster() {
 
-  const navigate = useNavigate();
+const navigate = useNavigate();
 
-  const [loading,setLoading]=useState(false);
-  const [posterUrl,setPosterUrl]=useState("");
-  const [error,setError]=useState("");
-  const [image,setImage]=useState(null);
 
-  const [form,setForm]=useState({
-    title:"",
-    description:"",
-    style:"cinematic",
-    size:"portrait"
-  });
+const [loading, setLoading] = useState(false);
+const [posterUrl, setPosterUrl] = useState("");
+const [error, setError] = useState("");
+const [image, setImage] = useState(null);
 
 
-  // ensure logged in
-  useEffect(()=>{
+const [form, setForm] = useState({
 
-    const token=localStorage.getItem("acinyx_token");
+title: "",
+description: "",
+style: "cinematic",
+size: "portrait"
 
-    if(!token){
+});
 
-      navigate("/login");
 
-    }
 
-  },[navigate]);
+useEffect(() => {
 
+const token = localStorage.getItem("acinyx_token");
 
-  function update(e){
+if (!token) navigate("/login");
 
-    setForm({...form,[e.target.name]:e.target.value});
+}, [navigate]);
 
-  }
 
 
-  async function generatePoster(){
+function update(e) {
 
-    const token=localStorage.getItem("acinyx_token");
+setForm({
+...form,
+[e.target.name]: e.target.value
+});
 
-    if(!token){
+}
 
-      navigate("/login");
-      return;
 
-    }
 
+async function generatePoster() {
 
-    if(!form.title){
 
-      setError("Enter poster title");
-      return;
+const token = localStorage.getItem("acinyx_token");
 
-    }
+if (!token) {
 
+navigate("/login");
+return;
 
-    setLoading(true);
-    setError("");
-    setPosterUrl("");
+}
 
 
-    try{
 
-      const data=new FormData();
+if (!form.title) {
 
-      data.append("title",form.title);
+setError("Enter title");
+return;
 
+}
 
-      const res=await fetch(`${API}/ai/poster`,{
 
-        method:"POST",
 
-        headers:{
-          Authorization:`Bearer ${token}`
-        },
+setLoading(true);
+setError("");
+setPosterUrl("");
 
-        body:data
 
-      });
+try {
 
+const data = new FormData();
 
+data.append("title", form.title);
 
-      // token expired
-      if(res.status===401){
+data.append("description", form.description);
 
-        localStorage.removeItem("acinyx_token");
-        navigate("/login");
+data.append("style", form.style);
 
-        return;
+data.append("size", form.size);
 
-      }
 
+if (image)
+data.append("image", image);
 
-      // poster limit reached
-      if(res.status===403){
 
-        setError("Poster limit reached. Upgrade your plan.");
-        return;
 
-      }
+const res = await fetch(`${API}/ai/poster`, {
 
+method: "POST",
 
+headers: {
+Authorization: `Bearer ${token}`
+},
 
-      const result=await res.json();
+body: data
 
+});
 
-      if(!res.ok){
 
-        throw new Error(result.detail || "Poster generation failed");
 
-      }
+if (res.status === 401) {
 
+localStorage.removeItem("acinyx_token");
+navigate("/login");
+return;
 
-      // correct field from backend
-      setPosterUrl(`${API}/${result.image}`);
+}
 
 
-    }
 
-    catch(err){
+if (res.status === 403) {
 
-      setError(err.message || "Generation failed");
+setError("Poster limit reached");
+return;
 
-    }
+}
 
-    finally{
 
-      setLoading(false);
 
-    }
+const result = await res.json();
 
-  }
 
+if (!res.ok)
+throw new Error(result.detail || "Generation failed");
 
 
-  return(
+setPosterUrl(`${API}/${result.image}`);
 
-    <div className="bg-[#050b18] min-h-screen text-white">
+}
 
-      <Navbar/>
 
+catch (err) {
 
-      <main className="max-w-5xl mx-auto px-4 md:px-6 py-12">
+setError(err.message);
 
+}
 
-        <h1 className="text-3xl font-bold mb-2">
 
-          AI Poster Generator
+finally {
 
-        </h1>
+setLoading(false);
 
+}
 
-        <p className="text-gray-400 mb-8">
+}
 
-          Create cinematic posters instantly.
 
-        </p>
 
 
 
-        <div className="bg-[#0b1226] p-6 rounded-xl border border-white/10 space-y-4">
+return (
 
 
-          <PosterImageUpload
+<div className="bg-[#050b18] min-h-screen text-white">
 
-          image={image}
+<Navbar />
 
-          setImage={setImage}
 
-          />
+<main className="max-w-4xl mx-auto px-4 py-12">
 
 
-          <input
 
-          name="title"
+<h1 className="text-3xl font-bold mb-2">
 
-          placeholder="Poster title"
+AI Poster Generator
 
-          value={form.title}
+</h1>
 
-          onChange={update}
 
-          className="w-full p-3 rounded text-black"
 
-          />
+<p className="text-gray-400 mb-8">
 
+Describe any image and generate cinematic poster
 
-          <button
+</p>
 
-          onClick={generatePoster}
 
-          disabled={loading}
 
-          className="w-full px-8 py-3 rounded bg-gradient-to-r from-green-400 to-blue-500 text-black font-bold"
 
-          >
+<div className="bg-[#0b1226] p-6 rounded-xl border border-white/10 space-y-4">
 
-            {
 
-              loading
 
-              ?
 
-              "Generating..."
+<PosterImageUpload
 
-              :
+image={image}
 
-              "Generate Poster"
+setImage={setImage}
 
-            }
+/>
 
-          </button>
 
 
-        </div>
 
+{/* Title */}
 
+<input
 
-        {
+name="title"
 
-        error &&
+placeholder="Poster title"
 
-        <p className="mt-4 text-red-400">
+value={form.title}
 
-          {error}
+onChange={update}
 
-        </p>
+className="w-full p-3 rounded bg-white text-black"
 
-        }
+/>
 
 
 
-        {
 
-        posterUrl &&
 
-        (
+{/* Description */}
 
-          <div className="mt-10 text-center">
+<textarea
 
+name="description"
 
-            <img
+placeholder="Describe your poster (hero, cyberpunk, anime, movie etc)"
 
-            src={posterUrl}
+value={form.description}
 
-            alt="Poster"
+onChange={update}
 
-            className="mx-auto w-full max-w-md rounded-xl border border-white/10"
+className="w-full p-3 rounded bg-white text-black h-24"
 
-            />
+/>
 
 
-            <div className="mt-4 flex flex-col sm:flex-row justify-center gap-3">
 
 
-              <a
 
-              href={posterUrl}
+{/* Style */}
 
-              download
+<select
 
-              className="px-6 py-2 bg-green-600 rounded"
+name="style"
 
-              >
+value={form.style}
 
-                Download
+onChange={update}
 
-              </a>
+className="w-full p-3 rounded bg-white text-black"
 
+>
 
+<option value="cinematic">Cinematic</option>
 
-              <a
+<option value="anime">Anime</option>
 
-              href={posterUrl}
+<option value="realistic">Realistic</option>
 
-              target="_blank"
+<option value="fantasy">Fantasy</option>
 
-              rel="noreferrer"
+<option value="cyberpunk">Cyberpunk</option>
 
-              className="px-6 py-2 bg-blue-600 rounded"
+</select>
 
-              >
 
-                Open
 
-              </a>
 
 
-            </div>
+{/* Size */}
 
+<select
 
-          </div>
+name="size"
 
-        )
+value={form.size}
 
-        }
+onChange={update}
 
+className="w-full p-3 rounded bg-white text-black"
 
-      </main>
+>
 
+<option value="portrait">
 
-      <Footer/>
+Portrait (2:3)
 
+</option>
 
-    </div>
+<option value="square">
 
-  );
+Square (1:1)
+
+</option>
+
+<option value="landscape">
+
+Landscape (16:9)
+
+</option>
+
+</select>
+
+
+
+
+
+
+<button
+
+onClick={generatePoster}
+
+disabled={loading}
+
+className="w-full py-3 rounded bg-gradient-to-r from-green-400 to-blue-500 text-black font-bold"
+
+>
+
+{loading ? "Generating..." : "Generate Poster"}
+
+</button>
+
+
+
+
+</div>
+
+
+
+
+{error &&
+
+<p className="mt-4 text-red-400">
+
+{error}
+
+</p>
+
+}
+
+
+
+
+
+{posterUrl && (
+
+<div className="mt-10 text-center">
+
+
+
+<img
+
+src={posterUrl}
+
+alt="poster"
+
+className="mx-auto max-w-md rounded-xl border border-white/10"
+
+/>
+
+
+
+
+<div className="mt-4 flex gap-3 justify-center">
+
+
+
+<a
+
+href={posterUrl}
+
+download
+
+className="px-6 py-2 bg-green-600 rounded"
+
+>
+
+Download
+
+</a>
+
+
+
+
+<a
+
+href={posterUrl}
+
+target="_blank"
+
+rel="noreferrer"
+
+className="px-6 py-2 bg-blue-600 rounded"
+
+>
+
+Open
+
+</a>
+
+
+
+</div>
+
+
+</div>
+
+)}
+
+
+
+</main>
+
+
+<Footer />
+
+
+</div>
+
+);
 
 }
