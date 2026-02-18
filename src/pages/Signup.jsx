@@ -1,150 +1,290 @@
-import { useState,useEffect } from "react";
-import { useNavigate,Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 
-const API=import.meta.env.VITE_API_URL;
+const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-export default function Signup(){
+export default function Signup() {
 
-const navigate=useNavigate();
+  const navigate = useNavigate();
 
-const[form,setForm]=useState({
+  const [form, setForm] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
 
-username:"",
-email:"",
-password:""
+  const [showPassword, setShowPassword] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-});
 
-const[accepted,setAccepted]=useState(false);
+  useEffect(() => {
+    const token = localStorage.getItem("acinyx_token");
+    if (token) navigate("/dashboard");
+  }, [navigate]);
 
-const[error,setError]=useState("");
 
-const[loading,setLoading]=useState(false);
+  function update(e) {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  }
 
-useEffect(()=>{
 
-const token=localStorage.getItem("acinyx_token");
+  function validate() {
 
-if(token) navigate("/dashboard");
+    if (!form.username || !form.email || !form.password)
+      return "All fields are required";
 
-},[]);
+    if (form.username.length < 3)
+      return "Username must be at least 3 characters";
 
+    if (!form.email.includes("@"))
+      return "Enter valid email";
 
-function update(e){
+    if (form.password.length < 6)
+      return "Password must be at least 6 characters";
 
-setForm({...form,[e.target.name]:e.target.value});
+    if (!accepted)
+      return "Accept Terms and Privacy Policy";
 
-}
+    return null;
+  }
 
 
-async function submit(){
+  async function submit(e) {
 
-if(!accepted){
+    e.preventDefault();
 
-setError("Accept terms first");
+    const validationError = validate();
 
-return;
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
 
-}
+    setLoading(true);
+    setError("");
 
-setLoading(true);
+    try {
 
-try{
+      const res = await fetch(`${API}/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(form),
+      });
 
-const res=await fetch(`${API}/signup`,{
+      const data = await res.json();
 
-method:"POST",
+      if (!res.ok)
+        throw new Error(data.detail || "Signup failed");
 
-headers:{"Content-Type":"application/json"},
+      navigate("/login");
 
-body:JSON.stringify(form)
+    }
 
-});
+    catch (err) {
 
-const data=await res.json();
+      setError(err.message);
 
-if(!res.ok) throw new Error(data.detail);
+    }
 
+    finally {
 
-// AUTO LOGIN
+      setLoading(false);
 
-const body=new URLSearchParams();
+    }
 
-body.append("username",form.username);
+  }
 
-body.append("password",form.password);
 
-const loginRes=await fetch(`${API}/token`,{
 
-method:"POST",
+  return (
 
-headers:{"Content-Type":"application/x-www-form-urlencoded"},
+<div className="min-h-screen flex items-center justify-center bg-gray-100">
 
-body
+<form
+onSubmit={submit}
+className="bg-white p-8 rounded-lg shadow-md w-full max-w-md"
+>
 
-});
 
-const loginData=await loginRes.json();
+<h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
 
-localStorage.setItem("acinyx_token",loginData.access_token);
+Create Account
 
-localStorage.setItem("acinyx_plan",loginData.plan);
+</h2>
 
-localStorage.setItem("acinyx_username",form.username);
 
-navigate("/dashboard");
 
-}
+{/* Username */}
 
-catch(e){
+<label className="block text-sm font-medium text-gray-700">
 
-setError(e.message);
+Username
 
-}
+</label>
 
-setLoading(false);
+<input
+name="username"
+value={form.username}
+onChange={update}
+className="w-full mt-1 mb-4 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+placeholder="Enter username"
+/>
 
-}
 
 
-return(
+{/* Email */}
 
-<div className="min-h-screen flex items-center justify-center bg-[#050b18] text-white">
+<label className="block text-sm font-medium text-gray-700">
 
-<div className="p-8 bg-[#0d1b2a] rounded w-96">
+Email
 
+</label>
 
-<h1>Create Account</h1>
+<input
+name="email"
+type="email"
+value={form.email}
+onChange={update}
+className="w-full mt-1 mb-4 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+placeholder="Enter email"
+/>
 
 
-<input name="username" onChange={update} placeholder="Username" className="w-full p-3 text-black"/>
 
 
-<input name="email" onChange={update} placeholder="Email" className="w-full p-3 text-black"/>
+{/* Password */}
 
+<label className="block text-sm font-medium text-gray-700">
 
-<input name="password" type="password" onChange={update} placeholder="Password" className="w-full p-3 text-black"/>
-
-
-<label>
-
-<input type="checkbox" onChange={e=>setAccepted(e.target.checked)}/>
-
-Accept Terms
+Password
 
 </label>
 
 
-<button onClick={submit}>
+<div className="relative mb-4">
 
-{loading?"Creating":"Signup"}
+<input
+type={showPassword ? "text" : "password"}
+name="password"
+value={form.password}
+onChange={update}
+className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+placeholder="Enter password"
+/>
+
+
+<button
+type="button"
+onClick={() => setShowPassword(!showPassword)}
+className="absolute right-3 top-2 text-sm text-gray-500"
+>
+
+{showPassword ? "Hide" : "Show"}
+
+</button>
+
+</div>
+
+
+
+
+{/* Terms */}
+
+<label className="flex items-center gap-2 mb-4 text-sm text-gray-700">
+
+<input
+type="checkbox"
+checked={accepted}
+onChange={(e) => setAccepted(e.target.checked)}
+/>
+
+
+<span>
+
+I agree to the
+
+<Link
+to="/terms"
+className="text-green-600 ml-1"
+>
+
+Terms
+
+</Link>
+
+and
+
+<Link
+to="/privacy"
+className="text-green-600 ml-1"
+>
+
+Privacy Policy
+
+</Link>
+
+</span>
+
+</label>
+
+
+
+
+{/* Error */}
+
+{error && (
+
+<p className="text-red-500 mb-3 text-sm">
+
+{error}
+
+</p>
+
+)}
+
+
+
+
+
+
+{/* Button */}
+
+<button
+type="submit"
+disabled={loading}
+className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition"
+>
+
+{loading ? "Creating..." : "Sign Up"}
 
 </button>
 
 
-{error}
 
-</div>
+
+
+<p className="text-sm mt-4 text-center">
+
+Already have account?
+
+<Link
+to="/login"
+className="text-green-600 ml-1"
+>
+
+Login
+
+</Link>
+
+</p>
+
+
+
+</form>
 
 </div>
 
