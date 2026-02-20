@@ -2,165 +2,341 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-const API = import.meta.env.VITE_API_URL;
+const API =
+  import.meta.env.VITE_API_URL ||
+  "https://acinyx-backend.onrender.com";
 
-/*
-  Paystack (KES account)
-  Display -> KES
-  Send -> KES * 100 (smallest unit)
-*/
+
+/* ================= PLAN DETAILS ================= */
 
 const PLAN_DETAILS = {
+
   free: {
     name: "Free",
     price: "KES 0",
-    description: "Limited access for testing the platform.",
+    description:
+      "50 chats, 5 posters, 5 images. Basic access.",
   },
+
   basic: {
     name: "Basic",
     price: "KES 500 / month",
-    description: "Perfect for starters. No watermark on posters.",
+    description:
+      "Unlimited chats, 50 posters, 50 images.",
   },
+
   pro: {
     name: "Pro",
     price: "KES 1500 / month",
-    description: "For professionals and growing businesses.",
+    description:
+      "Unlimited chats, 200 posters, 200 images.",
   },
+
   mega: {
     name: "Mega",
     price: "KES 3000 / month",
-    description: "Unlimited power for teams and agencies.",
+    description:
+      "Unlimited everything. Full power access.",
   },
+
 };
 
+
+/* ================= PLAN AMOUNTS ================= */
+
 const PLAN_AMOUNTS = {
+
   basic: 500,
   pro: 1500,
   mega: 3000,
+
 };
 
+
 export default function Checkout() {
+
   const [searchParams] = useSearchParams();
+
   const navigate = useNavigate();
 
-  const plan = searchParams.get("plan") || "free";
-  const planData = PLAN_DETAILS[plan];
+  const plan =
+    searchParams.get("plan") || "free";
+
+  const planData =
+    PLAN_DETAILS[plan];
+
+  const token =
+    localStorage.getItem("acinyx_token");
+
+
+  /* ================= PAYMENT ================= */
 
   async function pay() {
-    const token = localStorage.getItem("acinyx_token");
 
     if (!token) {
+
+      alert("Login required");
+
       navigate("/login");
+
       return;
+
     }
+
+
+    /* FREE PLAN */
 
     if (plan === "free") {
-      alert("Free plan does not require payment.");
+
+      alert("Free plan activated");
+
+      navigate("/dashboard");
+
       return;
+
     }
 
-    const baseAmount = PLAN_AMOUNTS[plan];
+
+    const baseAmount =
+      PLAN_AMOUNTS[plan];
+
 
     if (!baseAmount) {
-      alert("Invalid plan amount");
+
+      alert("Invalid plan");
+
       return;
+
     }
 
-    // ✅ Convert to smallest unit
-    const amount = baseAmount * 100;
+
+    const amount =
+      baseAmount * 100;
+
 
     try {
-      const res = await fetch(`${API}/payments/paystack/init`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          plan,
-          amount,
-        }),
-      });
 
-      const data = await res.json();
+      const res =
+        await fetch(
+          `${API}/payments/paystack/init`,
+          {
+
+            method: "POST",
+
+            headers: {
+
+              Authorization:
+                `Bearer ${token}`,
+
+              "Content-Type":
+                "application/json",
+
+            },
+
+            body: JSON.stringify({
+
+              plan,
+              amount,
+
+            }),
+
+          }
+        );
+
+
+      const data =
+        await res.json();
+
 
       if (res.status === 401) {
-        localStorage.removeItem("acinyx_token");
-        alert("Session expired. Please login again.");
+
+        localStorage.removeItem(
+          "acinyx_token"
+        );
+
+        alert("Session expired");
+
         navigate("/login");
+
         return;
+
       }
+
 
       if (!res.ok) {
-        alert(data?.detail || "Payment initialization failed");
+
+        alert(
+          data.detail ||
+          "Payment failed"
+        );
+
         return;
+
       }
+
 
       if (data.authorization_url) {
-        window.location.href = data.authorization_url;
-      } else {
-        alert("Paystack did not return a checkout URL");
+
+        window.location.href =
+          data.authorization_url;
+
       }
 
-    } catch {
-      alert("Unable to start payment");
+      else {
+
+        alert(
+          "Payment link failed"
+        );
+
+      }
+
     }
+
+    catch {
+
+      alert(
+        "Payment server error"
+      );
+
+    }
+
   }
 
-  if (!planData) {
+
+
+  /* ================= INVALID PLAN ================= */
+
+  if (!planData)
+
     return (
+
       <div className="min-h-screen bg-[#050b18] text-white">
+
         <Navbar />
-        <div className="max-w-3xl mx-auto px-6 py-24 text-center">
-          <h1 className="text-2xl font-bold mb-4">Invalid plan</h1>
-          <button
-            onClick={() => navigate("/pricing")}
-            className="px-6 py-3 bg-green-500 text-black rounded"
-          >
-            Go back to Pricing
-          </button>
+
+        <div className="max-w-3xl mx-auto py-24 text-center">
+
+          Invalid plan
+
         </div>
+
         <Footer />
+
       </div>
+
     );
-  }
+
+
+
+  /* ================= UI ================= */
 
   return (
+
     <div className="min-h-screen bg-[#050b18] text-white">
+
       <Navbar />
 
+
       <main className="max-w-3xl mx-auto px-6 py-24">
-        <h1 className="text-4xl font-bold mb-4">Checkout</h1>
 
-        <p className="text-gray-400 mb-10">
-          You are about to subscribe to the{" "}
-          <strong>{planData.name}</strong> plan.
-        </p>
 
-        <div className="bg-[#0b1226] border border-white/10 rounded-xl p-6 space-y-4">
+        <h1 className="text-4xl font-bold mb-6">
+
+          Checkout
+
+        </h1>
+
+
+        <div className="bg-[#0b1226] border border-white/10 rounded-xl p-8 space-y-6">
+
+
           <div>
-            <h2 className="text-2xl font-semibold">
+
+            <h2 className="text-3xl font-bold">
+
               {planData.name}
+
             </h2>
-            <p className="text-green-400 text-xl mt-1">
+
+
+            <p className="text-green-400 text-xl">
+
               {planData.price}
+
             </p>
+
           </div>
 
+
           <p className="text-gray-300">
+
             {planData.description}
+
           </p>
 
+
+
           <button
-            className="w-full mt-6 py-3 rounded bg-green-500 hover:bg-green-400 text-black font-bold"
+
             onClick={pay}
+
+            className="
+
+              w-full
+              py-3
+              rounded
+              bg-green-500
+              hover:bg-green-400
+              text-black
+              font-bold
+              transition
+
+            "
+
           >
-            Proceed to Payment
+
+            {plan === "free"
+
+              ? "Activate Free Plan"
+
+              : "Proceed to Payment"}
+
           </button>
+
+
+          <button
+
+            onClick={() =>
+              navigate("/pricing")
+            }
+
+            className="
+
+              w-full
+              py-3
+              rounded
+              border
+              border-white/20
+
+            "
+
+          >
+
+            Back
+
+          </button>
+
+
         </div>
+
+
       </main>
 
+
       <Footer />
+
     </div>
+
   );
+
 }
