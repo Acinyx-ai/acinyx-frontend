@@ -1,6 +1,7 @@
 import React from "react";
 
-/* Convert links into clickable */
+/* ---------- LINKIFY ---------- */
+
 function linkify(text) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
 
@@ -21,15 +22,20 @@ function linkify(text) {
   );
 }
 
-/* Copy code */
+/* ---------- COPY ---------- */
+
 function copy(text) {
   navigator.clipboard.writeText(text);
 }
 
-/* Split code blocks */
+/* ---------- PARSE CODE BLOCKS ---------- */
+/* FIXED: triple backticks */
+
 function parseBlocks(text) {
   const regex = /```([\s\S]*?)```/g;
+
   const parts = [];
+
   let last = 0;
   let match;
 
@@ -59,59 +65,62 @@ function parseBlocks(text) {
   return parts;
 }
 
-/* Render headings properly */
-function renderFormattedText(block, key) {
+/* ---------- HTML RENDER ---------- */
+
+function renderHTML(text, key) {
+  return (
+    <div
+      key={key}
+      className="
+        prose
+        prose-invert
+        max-w-none
+        text-sm
+        md:text-base
+        leading-relaxed
+        break-words
+      "
+      dangerouslySetInnerHTML={{
+        __html: text,
+      }}
+    />
+  );
+}
+
+/* ---------- MARKDOWN RENDER ---------- */
+
+function renderMarkdown(block, key) {
   const lines = block.split("\n");
 
   return (
     <div key={key} className="space-y-2">
       {lines.map((line, i) => {
-        if (!line.trim()) {
+        if (!line.trim())
           return <div key={i} className="h-2" />;
-        }
 
-        /* H1 */
-        if (line.startsWith("# ")) {
+        if (line.startsWith("# "))
           return (
-            <h1
-              key={i}
-              className="text-2xl font-bold mt-4 mb-2"
-            >
+            <h1 key={i} className="text-2xl font-bold mt-4">
               {line.replace("# ", "")}
             </h1>
           );
-        }
 
-        /* H2 */
-        if (line.startsWith("## ")) {
+        if (line.startsWith("## "))
           return (
-            <h2
-              key={i}
-              className="text-xl font-bold mt-3 mb-1"
-            >
+            <h2 key={i} className="text-xl font-bold mt-3">
               {line.replace("## ", "")}
             </h2>
           );
-        }
 
-        /* H3 */
-        if (line.startsWith("### ")) {
+        if (line.startsWith("### "))
           return (
-            <h3
-              key={i}
-              className="text-lg font-semibold mt-2"
-            >
+            <h3 key={i} className="text-lg font-semibold mt-2">
               {line.replace("### ", "")}
             </h3>
           );
-        }
 
-        /* Normal text */
         return (
-          <p
-            key={i}
-            className="whitespace-pre-wrap leading-relaxed text-sm md:text-base"
-          >
+          <p key={i} className="whitespace-pre-wrap">
             {linkify(line)}
           </p>
         );
@@ -120,6 +129,8 @@ function renderFormattedText(block, key) {
   );
 }
 
+/* ---------- MAIN COMPONENT ---------- */
+
 export default function MessageBubble({
   role,
   text,
@@ -127,13 +138,16 @@ export default function MessageBubble({
   loading,
 }) {
   const isUser = role === "user";
+
   const blocks = text ? parseBlocks(text) : [];
 
   return (
     <div className={`max-w-[85%] ${isUser ? "ml-auto" : ""}`}>
+      
       <div
         className={`
-          px-4 py-3
+          px-4
+          py-3
           rounded-xl
           space-y-3
           ${
@@ -143,69 +157,88 @@ export default function MessageBubble({
           }
         `}
       >
-        {/* Image */}
+
+        {/* IMAGE */}
+
         {image && (
           <img
             src={image}
             alt="generated"
-            className="rounded-lg max-w-full cursor-pointer hover:opacity-90"
+            className="rounded-lg max-w-full"
           />
         )}
 
-        {/* Loading */}
+        {/* LOADING */}
+
         {loading && (
-          <div className="opacity-60 animate-pulse">
-            Thinking…
+          <div className="animate-pulse opacity-60">
+            Thinking...
           </div>
         )}
 
-        {/* Content */}
+        {/* CONTENT */}
+
         {!loading &&
           blocks.map((b, i) => {
-            if (b.type === "code") {
+
+            /* CODE BLOCK */
+
+            if (b.type === "code")
               return (
                 <div
                   key={i}
                   className="
                     relative
-                    rounded-lg
                     bg-[#060b18]
-                    border border-indigo-400/30
+                    border
+                    border-indigo-400/30
+                    rounded-lg
                     p-3
                     font-mono
                     text-sm
-                    text-indigo-100
                     overflow-x-auto
                   "
                 >
+
                   <button
                     onClick={() => copy(b.value)}
                     className="
                       absolute
-                      top-2
                       right-2
+                      top-2
+                      text-xs
                       px-2
                       py-1
-                      text-xs
                       rounded
                       bg-indigo-500
                       text-black
-                      hover:bg-indigo-400
                     "
                   >
                     Copy
                   </button>
 
-                  <pre className="whitespace-pre-wrap">
-                    {b.value}
-                  </pre>
+                  <pre>{b.value}</pre>
+
                 </div>
               );
-            }
 
-            return renderFormattedText(b.value, i);
+            /* HTML DETECT */
+
+            if (
+              b.value.includes("<br") ||
+              b.value.includes("<strong") ||
+              b.value.includes("<h")
+            )
+              return renderHTML(b.value, i);
+
+            /* MARKDOWN */
+
+            return renderMarkdown(b.value, i);
+
           })}
+
       </div>
+
     </div>
   );
 }
