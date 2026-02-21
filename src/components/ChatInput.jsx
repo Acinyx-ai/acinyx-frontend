@@ -10,9 +10,7 @@ export default function ChatInput({ onSend, disabled }) {
   const textareaRef = useRef(null);
 
 
-  //////////////////////////////////////////////////
-  // CLEANUP PREVIEW URL (prevents memory leaks)
-  //////////////////////////////////////////////////
+  // CLEANUP PREVIEW URL
 
   useEffect(() => {
 
@@ -26,9 +24,7 @@ export default function ChatInput({ onSend, disabled }) {
   }, [preview]);
 
 
-  //////////////////////////////////////////////////
   // RESET INPUT
-  //////////////////////////////////////////////////
 
   function reset() {
 
@@ -49,9 +45,7 @@ export default function ChatInput({ onSend, disabled }) {
   }
 
 
-  //////////////////////////////////////////////////
   // SEND MESSAGE
-  //////////////////////////////////////////////////
 
   function send(mode = "chat") {
 
@@ -65,9 +59,7 @@ export default function ChatInput({ onSend, disabled }) {
   }
 
 
-  //////////////////////////////////////////////////
   // IMAGE SELECT
-  //////////////////////////////////////////////////
 
   function handleFileChange(e) {
 
@@ -84,9 +76,7 @@ export default function ChatInput({ onSend, disabled }) {
   }
 
 
-  //////////////////////////////////////////////////
   // REMOVE IMAGE
-  //////////////////////////////////////////////////
 
   function removeImage() {
 
@@ -102,9 +92,7 @@ export default function ChatInput({ onSend, disabled }) {
   }
 
 
-  //////////////////////////////////////////////////
-  // AUTO RESIZE TEXTAREA
-  //////////////////////////////////////////////////
+  // AUTO RESIZE
 
   function autoResize(e) {
 
@@ -118,9 +106,7 @@ export default function ChatInput({ onSend, disabled }) {
   }
 
 
-  //////////////////////////////////////////////////
   // ENTER KEY SEND
-  //////////////////////////////////////////////////
 
   function handleKeyDown(e) {
 
@@ -135,16 +121,12 @@ export default function ChatInput({ onSend, disabled }) {
   }
 
 
-  //////////////////////////////////////////////////
   // UI
-  //////////////////////////////////////////////////
 
   return (
 
     <div className="p-4 border-t border-white/10 space-y-3">
 
-
-      {/* IMAGE PREVIEW */}
 
       {preview && (
 
@@ -168,18 +150,14 @@ export default function ChatInput({ onSend, disabled }) {
       )}
 
 
-
       <div className="flex items-end gap-2">
 
-
-        {/* IMAGE PICKER */}
 
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={disabled}
           className="h-11 w-11 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-50"
-          title="Upload image"
         >
           📷
         </button>
@@ -193,9 +171,6 @@ export default function ChatInput({ onSend, disabled }) {
           onChange={handleFileChange}
         />
 
-
-
-        {/* TEXT INPUT */}
 
         <textarea
           ref={textareaRef}
@@ -228,68 +203,28 @@ export default function ChatInput({ onSend, disabled }) {
         />
 
 
-
-        {/* HUMANIZE */}
-
         <button
           onClick={() => send("humanize")}
           disabled={disabled}
-          className="
-            h-11
-            px-3
-            rounded-lg
-            bg-purple-500
-            hover:bg-purple-600
-            text-white
-            text-sm
-            font-semibold
-            disabled:opacity-50
-          "
-          title="Humanize text"
+          className="h-11 px-3 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-sm font-semibold disabled:opacity-50"
         >
           Humanize
         </button>
 
 
-
-        {/* IMAGE GENERATE */}
-
         <button
           onClick={() => send("image")}
           disabled={disabled}
-          className="
-            h-11
-            px-3
-            rounded-lg
-            bg-green-500
-            hover:bg-green-600
-            text-white
-            text-sm
-            font-semibold
-            disabled:opacity-50
-          "
-          title="Generate image"
+          className="h-11 px-3 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-semibold disabled:opacity-50"
         >
           Image
         </button>
 
 
-
-        {/* SEND */}
-
         <button
           onClick={() => send("chat")}
           disabled={disabled}
-          className="
-            h-11
-            px-5
-            rounded-lg
-            bg-blue-500
-            hover:bg-blue-600
-            text-white
-            font-semibold
-            disabled:opacity-50
-          "
+          className="h-11 px-5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold disabled:opacity-50"
         >
           Send
         </button>
