@@ -1,368 +1,305 @@
-import { useRef, useState } from "react";
-
+import { useRef, useState, useEffect } from "react";
 
 export default function ChatInput({ onSend, disabled }) {
 
+  const [value, setValue] = useState("");
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null);
 
-const [value, setValue] = useState("");
+  const fileRef = useRef(null);
+  const textareaRef = useRef(null);
 
-const [image, setImage] = useState(null);
 
-const [preview, setPreview] = useState(null);
+  //////////////////////////////////////////////////
+  // CLEANUP PREVIEW URL (prevents memory leaks)
+  //////////////////////////////////////////////////
 
-const fileRef = useRef(null);
+  useEffect(() => {
 
-const textareaRef = useRef(null);
+    return () => {
 
+      if (preview)
+        URL.revokeObjectURL(preview);
 
+    };
 
+  }, [preview]);
 
-//////////////////////////////////////////////////
-// SEND NORMAL MESSAGE
-//////////////////////////////////////////////////
 
-function send(mode = "chat") {
+  //////////////////////////////////////////////////
+  // RESET INPUT
+  //////////////////////////////////////////////////
 
-if (!value.trim() && !image) return;
+  function reset() {
 
-onSend(value, image, mode);
+    setValue("");
+    setImage(null);
 
+    if (preview)
+      URL.revokeObjectURL(preview);
 
-setValue("");
+    setPreview(null);
 
-setImage(null);
+    if (fileRef.current)
+      fileRef.current.value = "";
 
-setPreview(null);
+    if (textareaRef.current)
+      textareaRef.current.style.height = "auto";
 
+  }
 
-if (fileRef.current)
-fileRef.current.value = "";
 
+  //////////////////////////////////////////////////
+  // SEND MESSAGE
+  //////////////////////////////////////////////////
 
-if (textareaRef.current)
-textareaRef.current.style.height = "auto";
+  function send(mode = "chat") {
 
-}
+    if (!value.trim() && !image)
+      return;
 
+    onSend(value.trim(), image, mode);
 
+    reset();
 
+  }
 
-//////////////////////////////////////////////////
-// HANDLE IMAGE SELECT
-//////////////////////////////////////////////////
 
-function handleFileChange(e) {
+  //////////////////////////////////////////////////
+  // IMAGE SELECT
+  //////////////////////////////////////////////////
 
-const file = e.target.files?.[0];
+  function handleFileChange(e) {
 
-if (!file) return;
+    const file = e.target.files?.[0];
 
-setImage(file);
+    if (!file) return;
 
-setPreview(URL.createObjectURL(file));
+    if (preview)
+      URL.revokeObjectURL(preview);
 
-}
+    setImage(file);
+    setPreview(URL.createObjectURL(file));
 
+  }
 
 
+  //////////////////////////////////////////////////
+  // REMOVE IMAGE
+  //////////////////////////////////////////////////
 
-//////////////////////////////////////////////////
-// AUTO RESIZE TEXTAREA
-//////////////////////////////////////////////////
+  function removeImage() {
 
-function autoResize(e) {
+    if (preview)
+      URL.revokeObjectURL(preview);
 
-e.target.style.height = "auto";
+    setImage(null);
+    setPreview(null);
 
-e.target.style.height =
-Math.min(e.target.scrollHeight, 160) + "px";
+    if (fileRef.current)
+      fileRef.current.value = "";
 
-}
+  }
 
 
+  //////////////////////////////////////////////////
+  // AUTO RESIZE TEXTAREA
+  //////////////////////////////////////////////////
 
+  function autoResize(e) {
 
-//////////////////////////////////////////////////
-// UI
-//////////////////////////////////////////////////
+    const el = e.target;
 
-return (
+    el.style.height = "auto";
 
-<div className="p-4 border-t border-white/10 space-y-3">
+    el.style.height =
+      Math.min(el.scrollHeight, 160) + "px";
 
+  }
 
 
-{/* IMAGE PREVIEW */}
+  //////////////////////////////////////////////////
+  // ENTER KEY SEND
+  //////////////////////////////////////////////////
 
-{preview && (
+  function handleKeyDown(e) {
 
-<div className="relative w-32">
+    if (e.key === "Enter" && !e.shiftKey) {
 
-<img
+      e.preventDefault();
 
-src={preview}
+      send("chat");
 
-className="rounded-lg border border-white/20"
+    }
 
-/>
+  }
 
 
-<button
+  //////////////////////////////////////////////////
+  // UI
+  //////////////////////////////////////////////////
 
-onClick={() => {
+  return (
 
-setImage(null);
+    <div className="p-4 border-t border-white/10 space-y-3">
 
-setPreview(null);
 
-}}
+      {/* IMAGE PREVIEW */}
 
-className="absolute -top-2 -right-2 bg-black text-white w-6 h-6 rounded-full"
+      {preview && (
 
->
+        <div className="relative w-32">
 
-×
+          <img
+            src={preview}
+            alt="preview"
+            className="rounded-lg border border-white/20"
+          />
 
-</button>
+          <button
+            onClick={removeImage}
+            className="absolute -top-2 -right-2 bg-black text-white w-6 h-6 rounded-full hover:bg-red-600"
+          >
+            ×
+          </button>
 
-</div>
+        </div>
 
-)}
+      )}
 
 
 
+      <div className="flex items-end gap-2">
 
 
-<div className="flex items-end gap-2">
+        {/* IMAGE PICKER */}
 
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={disabled}
+          className="h-11 w-11 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-50"
+          title="Upload image"
+        >
+          📷
+        </button>
 
 
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
 
-{/* IMAGE PICKER */}
 
-<button
 
-type="button"
+        {/* TEXT INPUT */}
 
-onClick={() => fileRef.current?.click()}
+        <textarea
+          ref={textareaRef}
+          rows={1}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => {
 
-disabled={disabled}
+            setValue(e.target.value);
 
-className="h-11 w-11 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20"
+            autoResize(e);
 
-title="Upload image"
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder="Ask Acinyx anything…"
+          className="
+            flex-1
+            resize-none
+            rounded-lg
+            bg-white/10
+            p-3
+            text-white
+            outline-none
+            focus:ring-1
+            focus:ring-blue-400
+            max-h-40
+            overflow-y-auto
+            disabled:opacity-50
+          "
+        />
 
->
 
-📷
 
-</button>
+        {/* HUMANIZE */}
 
+        <button
+          onClick={() => send("humanize")}
+          disabled={disabled}
+          className="
+            h-11
+            px-3
+            rounded-lg
+            bg-purple-500
+            hover:bg-purple-600
+            text-white
+            text-sm
+            font-semibold
+            disabled:opacity-50
+          "
+          title="Humanize text"
+        >
+          Humanize
+        </button>
 
 
-<input
 
-ref={fileRef}
+        {/* IMAGE GENERATE */}
 
-type="file"
+        <button
+          onClick={() => send("image")}
+          disabled={disabled}
+          className="
+            h-11
+            px-3
+            rounded-lg
+            bg-green-500
+            hover:bg-green-600
+            text-white
+            text-sm
+            font-semibold
+            disabled:opacity-50
+          "
+          title="Generate image"
+        >
+          Image
+        </button>
 
-accept="image/*"
 
-className="hidden"
 
-onChange={handleFileChange}
+        {/* SEND */}
 
-/>
+        <button
+          onClick={() => send("chat")}
+          disabled={disabled}
+          className="
+            h-11
+            px-5
+            rounded-lg
+            bg-blue-500
+            hover:bg-blue-600
+            text-white
+            font-semibold
+            disabled:opacity-50
+          "
+        >
+          Send
+        </button>
 
 
+      </div>
 
 
+    </div>
 
-{/* TEXT INPUT */}
-
-<textarea
-
-ref={textareaRef}
-
-rows={1}
-
-value={value}
-
-disabled={disabled}
-
-onChange={(e) => {
-
-setValue(e.target.value);
-
-autoResize(e);
-
-}}
-
-onKeyDown={(e) => {
-
-if (e.key === "Enter" && !e.shiftKey) {
-
-e.preventDefault();
-
-send("chat");
-
-}
-
-}}
-
-placeholder="Ask Acinyx anything…"
-
-className="
-
-flex-1
-
-resize-none
-
-rounded-lg
-
-bg-white/10
-
-p-3
-
-text-white
-
-outline-none
-
-focus:ring-1
-
-focus:ring-blue-400
-
-max-h-40
-
-overflow-y-auto
-
-"
-
-/>
-
-
-
-
-
-{/* HUMANIZE BUTTON */}
-
-<button
-
-onClick={() => send("humanize")}
-
-disabled={disabled}
-
-className="
-
-h-11
-
-px-3
-
-rounded-lg
-
-bg-purple-500
-
-hover:bg-purple-600
-
-text-white
-
-text-sm
-
-font-semibold
-
-"
-
-title="Humanize text"
-
->
-
-Humanize
-
-</button>
-
-
-
-
-
-{/* GENERATE IMAGE BUTTON */}
-
-<button
-
-onClick={() => send("image")}
-
-disabled={disabled}
-
-className="
-
-h-11
-
-px-3
-
-rounded-lg
-
-bg-green-500
-
-hover:bg-green-600
-
-text-white
-
-text-sm
-
-font-semibold
-
-"
-
-title="Generate image"
-
->
-
-Image
-
-</button>
-
-
-
-
-
-{/* SEND BUTTON */}
-
-<button
-
-onClick={() => send("chat")}
-
-disabled={disabled}
-
-className="
-
-h-11
-
-px-5
-
-rounded-lg
-
-bg-blue-500
-
-hover:bg-blue-600
-
-text-white
-
-font-semibold
-
-"
-
->
-
-Send
-
-</button>
-
-
-
-</div>
-
-
-</div>
-
-);
+  );
 
 }
