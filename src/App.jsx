@@ -14,9 +14,13 @@ import Poster from "./pages/Poster";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 
+/* ADMIN DASHBOARD */
+import Acinyxdata from "./pages/Acinyxdata";
 
 
-/* PRODUCTION SAFE ROUTE GUARD */
+
+/* ================= PROTECTED ROUTE ================= */
+
 function Protected({ children }) {
 
   const token = localStorage.getItem("acinyx_token");
@@ -33,7 +37,7 @@ function Protected({ children }) {
 
 
 
-/* PREVENT LOGIN PAGE IF ALREADY LOGGED IN */
+/* ================= PUBLIC ONLY ================= */
 
 function PublicOnly({ children }) {
 
@@ -51,6 +55,8 @@ function PublicOnly({ children }) {
 
 
 
+/* ================= APP ================= */
+
 export default function App() {
 
   return (
@@ -63,125 +69,92 @@ export default function App() {
         {/* DEFAULT */}
 
         <Route
-
           path="/"
-
           element={<Navigate to="/dashboard" replace />}
-
         />
 
 
         {/* DASHBOARD */}
 
         <Route
-
           path="/dashboard"
-
           element={
-
             <Protected>
-
               <Dashboard />
-
             </Protected>
-
           }
-
         />
 
 
         {/* LOGIN */}
 
         <Route
-
           path="/login"
-
           element={
-
             <PublicOnly>
-
               <Login />
-
             </PublicOnly>
-
           }
-
         />
 
 
         {/* SIGNUP */}
 
         <Route
-
           path="/signup"
-
           element={
-
             <PublicOnly>
-
               <Signup />
-
             </PublicOnly>
-
           }
-
         />
 
 
         {/* CHAT */}
 
         <Route
-
           path="/chat"
-
           element={
-
             <Protected>
-
               <Chat />
-
             </Protected>
-
           }
-
         />
 
 
         {/* POSTER */}
 
         <Route
-
           path="/poster"
-
           element={
-
             <Protected>
-
               <Poster />
-
             </Protected>
-
           }
-
         />
 
 
         {/* CHECKOUT */}
 
         <Route
-
           path="/checkout"
-
           element={
-
             <Protected>
-
               <Checkout />
-
             </Protected>
-
           }
+        />
 
+
+        {/* ADMIN DASHBOARD (HIDDEN) */}
+
+        <Route
+          path="/acinyxdata"
+          element={
+            <Protected>
+              <Acinyxdata />
+            </Protected>
+          }
         />
 
 
@@ -201,11 +174,8 @@ export default function App() {
         {/* FALLBACK */}
 
         <Route
-
           path="*"
-
           element={<Navigate to="/dashboard" replace />}
-
         />
 
 
