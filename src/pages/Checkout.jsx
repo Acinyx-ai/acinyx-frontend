@@ -13,30 +13,30 @@ const PLAN_DETAILS = {
 
   free: {
     name: "Free",
-    price: "KES 0",
+    price: "KES 0 / month",
     description:
-      "50 chats, 5 posters, 5 images. Basic access.",
+      "20 chats, 3 posters, 3 images, 20 humaniser. Watermarked posters, standard speed.",
   },
 
   basic: {
     name: "Basic",
-    price: "KES 500 / month",
+    price: "KES 250 / month",
     description:
-      "Unlimited chats, 50 posters, 50 images.",
+      "Unlimited chats, 50 posters, 50 images, 100 humaniser. No watermark. HD output.",
   },
 
   pro: {
     name: "Pro",
-    price: "KES 1500 / month",
+    price: "KES 500 / month",
     description:
-      "Unlimited chats, 200 posters, 200 images.",
+      "Unlimited chats, 200 posters, 200 images, unlimited humaniser. Faster priority generation.",
   },
 
   mega: {
     name: "Mega",
-    price: "KES 3000 / month",
+    price: "KES 1500 / month",
     description:
-      "Unlimited everything. Full power access.",
+      "Unlimited everything. Ultra HD output. Commercial license. Dedicated support.",
   },
 
 };
@@ -46,9 +46,9 @@ const PLAN_DETAILS = {
 
 const PLAN_AMOUNTS = {
 
-  basic: 500,
-  pro: 1500,
-  mega: 3000,
+  basic: 250,
+  pro: 500,
+  mega: 1500,
 
 };
 
@@ -67,6 +67,7 @@ export default function Checkout() {
 
   const token =
     localStorage.getItem("acinyx_token");
+
 
 
   /* ================= PAYMENT ================= */
@@ -109,6 +110,8 @@ export default function Checkout() {
 
     }
 
+
+    /* PAYSTACK USES KOBO / CENTS */
 
     const amount =
       baseAmount * 100;
