@@ -8,408 +8,427 @@ import ThemeToggle from "../components/ThemeToggle";
 
 import logo from "../assets/logo.png";
 
+
 /* ================= API HELPER ================= */
 
 const BASE_URL = import.meta.env.VITE_API_URL || "";
 
 const API = (path) => `${BASE_URL}${path}`;
 
+
 /* ================= COMPONENT ================= */
 
 export default function Chat() {
 
-  const navigate = useNavigate();
+const navigate = useNavigate();
 
-  const bottomRef = useRef(null);
+const bottomRef = useRef(null);
 
-  const [messages, setMessages] = useState([]);
+const [messages, setMessages] = useState([]);
 
-  const [loading, setLoading] = useState(false);
+const [loading, setLoading] = useState(false);
 
-  const [showUpgradeNotice, setShowUpgradeNotice] = useState(false);
+const [showUpgradeNotice, setShowUpgradeNotice] = useState(false);
 
 
-  /* ================= AUTH CHECK ================= */
 
-  useEffect(() => {
+/* ================= AUTH CHECK ================= */
 
-    const token = localStorage.getItem("acinyx_token");
+useEffect(() => {
 
-    if (!token) {
-      navigate("/login");
-    }
+const token = localStorage.getItem("acinyx_token");
 
-  }, [navigate]);
+if (!token) navigate("/login");
 
+}, [navigate]);
 
-  /* ================= LOAD HISTORY ================= */
 
-  useEffect(() => {
 
-    const token = localStorage.getItem("acinyx_token");
+/* ================= LOAD HISTORY ================= */
 
-    if (!token) return;
+useEffect(() => {
 
-    const key = `acinyx_chat_history_${token}`;
+const token = localStorage.getItem("acinyx_token");
 
-    try {
+if (!token) return;
 
-      const saved = localStorage.getItem(key);
+const key = `acinyx_chat_history_${token}`;
 
-      if (saved) {
+try {
 
-        setMessages(JSON.parse(saved));
+const saved = localStorage.getItem(key);
 
-      }
+if (saved) setMessages(JSON.parse(saved));
 
-    } catch {
+}
 
-      localStorage.removeItem(key);
+catch {
 
-    }
+localStorage.removeItem(key);
 
-  }, []);
+}
 
+}, []);
 
-  /* ================= SAVE HISTORY ================= */
 
-  useEffect(() => {
 
-    const token = localStorage.getItem("acinyx_token");
+/* ================= SAVE HISTORY ================= */
 
-    if (!token) return;
+useEffect(() => {
 
-    const key = `acinyx_chat_history_${token}`;
+const token = localStorage.getItem("acinyx_token");
 
-    try {
+if (!token) return;
 
-      localStorage.setItem(
-        key,
-        JSON.stringify(messages)
-      );
+const key = `acinyx_chat_history_${token}`;
 
-    } catch {}
+localStorage.setItem(key, JSON.stringify(messages));
 
-  }, [messages]);
+}, [messages]);
 
 
-  /* ================= AUTO SCROLL ================= */
 
-  useEffect(() => {
+/* ================= AUTO SCROLL ================= */
 
-    bottomRef.current?.scrollIntoView({
-      behavior: "smooth"
-    });
+useEffect(() => {
 
-  }, [messages, loading]);
+bottomRef.current?.scrollIntoView({
 
+behavior: "smooth"
 
-  /* ================= SEND MESSAGE ================= */
+});
 
-  async function sendMessage(text, image, mode = "chat") {
+}, [messages, loading]);
 
-    if (loading) return;
 
-    if (!text && !image) return;
 
-    const token = localStorage.getItem("acinyx_token");
+/* ================= SEND MESSAGE ================= */
 
-    if (!token) {
+async function sendMessage(text, image, mode = "chat") {
 
-      navigate("/login");
+if (loading) return;
 
-      return;
+if (!text && !image) return;
 
-    }
+const token = localStorage.getItem("acinyx_token");
 
+if (!token) {
 
-    /* USER MESSAGE */
+navigate("/login");
 
-    const userMessage = {
+return;
 
-      id: Date.now(),
+}
 
-      role: "user",
 
-      text: text || "",
 
-      image: image
-        ? URL.createObjectURL(image)
-        : null
+/* USER MESSAGE */
 
-    };
+const userMessage = {
 
+id: Date.now(),
 
-    setMessages(prev => [
+role: "user",
 
-      ...prev,
+text: text || "",
 
-      userMessage
+image: image ? URL.createObjectURL(image) : null
 
-    ]);
+};
 
+setMessages(prev => [...prev, userMessage]);
 
-    setLoading(true);
+setLoading(true);
 
 
-    try {
 
-      const form = new FormData();
+try {
 
+//////////////////////////////////////////////////
+// BUILD REQUEST BASED ON MODE
+//////////////////////////////////////////////////
 
-      if (text) {
+const form = new FormData();
 
-        form.append("message", text);
+let endpoint = "/ai/chat";
 
-      }
 
+if (mode === "image") {
 
-      if (image) {
+endpoint = "/ai/image";
 
-        form.append("image", image);
+form.append("prompt", text);
 
-      }
+}
 
+else if (mode === "humanize") {
 
-      form.append("mode", mode);
+endpoint = "/ai/humanize";
 
+form.append("message", text);
 
-      const res = await fetch(
-        API("/ai/chat"),
-        {
-          method: "POST",
+}
 
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
+else {
 
-          body: form
-        }
-      );
+endpoint = "/ai/chat";
 
+form.append("message", text);
 
-      if (res.status === 401) {
+}
 
-        localStorage.removeItem("acinyx_token");
 
-        navigate("/login");
+if (image) {
 
-        return;
+form.append("image", image);
 
-      }
+}
 
 
-      if (res.status === 403) {
 
-        setShowUpgradeNotice(true);
+//////////////////////////////////////////////////
+// SEND REQUEST
+//////////////////////////////////////////////////
 
-        setLoading(false);
+const res = await fetch(
 
-        return;
+API(endpoint),
 
-      }
+{
 
+method: "POST",
 
-      const data = await res.json();
+headers: {
 
+Authorization: `Bearer ${token}`
 
-      if (!res.ok) {
+},
 
-        throw new Error("Server error");
+body: form
 
-      }
+}
 
+);
 
-      setShowUpgradeNotice(false);
 
 
-      /* ASSISTANT MESSAGE */
+//////////////////////////////////////////////////
+// HANDLE AUTH ERRORS
+//////////////////////////////////////////////////
 
-      const assistantMessage = {
+if (res.status === 401) {
 
-        id: Date.now() + 1,
+localStorage.removeItem("acinyx_token");
 
-        role: "assistant",
+navigate("/login");
 
-        text: data.reply || "",
+return;
 
-        image: data.image
-          ? `${BASE_URL}/${data.image}`
-          : null
+}
 
-      };
 
 
-      setMessages(prev => [
+//////////////////////////////////////////////////
+// HANDLE LIMIT
+//////////////////////////////////////////////////
 
-        ...prev,
+if (res.status === 403) {
 
-        assistantMessage
+setShowUpgradeNotice(true);
 
-      ]);
+return;
 
-    }
+}
 
-    catch {
 
-      setMessages(prev => [
 
-        ...prev,
+const data = await res.json();
 
-        {
-          id: Date.now(),
+if (!res.ok) throw new Error();
 
-          role: "assistant",
 
-          text: "⚠️ Server error. Try again."
-        }
 
-      ]);
+setShowUpgradeNotice(false);
 
-    }
 
-    finally {
 
-      setLoading(false);
+//////////////////////////////////////////////////
+// ASSISTANT MESSAGE
+//////////////////////////////////////////////////
 
-    }
+const assistantMessage = {
 
-  }
+id: Date.now() + 1,
 
+role: "assistant",
 
-  /* ================= UI ================= */
+text: data.reply || "",
 
-  return (
+image: data.image
 
-    <div className="flex h-screen bg-[#0b0f1a] text-white">
+? `${BASE_URL}/${data.image}`
 
-      {/* SIDEBAR */}
+: null
 
-      <div className="hidden md:block">
+};
 
-        <ChatSidebar />
+setMessages(prev => [...prev, assistantMessage]);
 
-      </div>
 
 
-      {/* MAIN */}
+}
 
-      <main className="flex flex-col flex-1">
+catch {
 
+setMessages(prev => [
 
-        {/* HEADER */}
+...prev,
 
-        <header className="flex items-center justify-between px-6 py-3 border-b border-white/10">
+{
 
+id: Date.now(),
 
-          <div
-            className="flex items-center gap-3 cursor-pointer"
-            onClick={() => navigate("/")}
-          >
+role: "assistant",
 
-            <img
-              src={logo}
-              className="w-8 h-8"
-              alt="logo"
-            />
+text: "⚠️ Server error. Try again."
 
+}
 
-            <h1 className="text-lg font-semibold">
+]);
 
-              Acinyx
+}
 
-              <span className="text-blue-400">
+finally {
 
-                .AI
+setLoading(false);
 
-              </span>
+}
 
-            </h1>
+}
 
-          </div>
 
 
-          <ThemeToggle />
+/* ================= UI ================= */
 
+return (
 
-        </header>
+<div className="flex h-screen bg-[#0b0f1a] text-white">
 
 
-        {/* LIMIT NOTICE */}
+{/* SIDEBAR */}
 
-        {showUpgradeNotice && (
+<div className="hidden md:block">
 
-          <div className="mx-6 mt-4 border border-yellow-400/40 bg-yellow-400/10 px-4 py-3 flex justify-between rounded">
+<ChatSidebar />
 
+</div>
 
-            <span>
 
-              Plan limit reached
 
-            </span>
+{/* MAIN */}
 
+<main className="flex flex-col flex-1">
 
-            <button
-              onClick={() => navigate("/pricing")}
-              className="bg-yellow-400 text-black px-3 py-1 rounded"
-            >
 
-              Upgrade
+{/* HEADER */}
 
-            </button>
+<header className="flex items-center justify-between px-6 py-3 border-b border-white/10">
 
+<div
 
-          </div>
+className="flex items-center gap-3 cursor-pointer"
 
-        )}
+onClick={() => navigate("/")}
 
+>
 
-        {/* CHAT AREA */}
+<img src={logo} className="w-8 h-8" alt="logo"/>
 
-        <section className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+<h1 className="text-lg font-semibold">
 
+Acinyx
 
-          {messages.map(msg => (
+<span className="text-blue-400">.AI</span>
 
-            <MessageBubble
-              key={msg.id}
-              role={msg.role}
-              text={msg.text}
-              image={msg.image}
-            />
+</h1>
 
-          ))}
+</div>
 
+<ThemeToggle />
 
-          {loading && (
+</header>
 
-            <MessageBubble
-              role="assistant"
-              loading
-            />
 
-          )}
 
+{/* LIMIT NOTICE */}
 
-          <div ref={bottomRef} />
+{showUpgradeNotice && (
 
+<div className="mx-6 mt-4 border border-yellow-400/40 bg-yellow-400/10 px-4 py-3 flex justify-between rounded">
 
-        </section>
+<span>Plan limit reached</span>
 
+<button
 
-        {/* INPUT */}
+onClick={() => navigate("/pricing")}
 
-        <ChatInput
-          onSend={sendMessage}
-          disabled={loading}
-        />
+className="bg-yellow-400 text-black px-3 py-1 rounded"
 
+>
 
-      </main>
+Upgrade
 
+</button>
 
-    </div>
+</div>
 
-  );
+)}
+
+
+
+{/* CHAT AREA */}
+
+<section className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+
+{messages.map(msg => (
+
+<MessageBubble
+
+key={msg.id}
+
+role={msg.role}
+
+text={msg.text}
+
+image={msg.image}
+
+/>
+
+))}
+
+{loading && <MessageBubble role="assistant" loading />}
+
+<div ref={bottomRef} />
+
+</section>
+
+
+
+{/* INPUT */}
+
+<ChatInput
+
+onSend={sendMessage}
+
+disabled={loading}
+
+/>
+
+
+</main>
+
+</div>
+
+);
 
 }
